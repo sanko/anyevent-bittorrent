@@ -31,7 +31,8 @@ my $mb = ($is_developer ? ('_dev::Builder') : 'Module::Build')->new(
     },
     build_requires => {'Module::Build' => 0.38,
                        perl            => '5.10.0',
-                       'Test::More'    => 0
+                       'Test::More'    => 0,
+                       'File::Temp'    => 0
     },
     configure_requires => {'File::Find'    => 0,
                            'Module::Build' => 0.38
