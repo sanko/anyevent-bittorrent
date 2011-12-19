@@ -1,0 +1,5 @@
+Everything marked with XXX in /lib/AnyEvent/BitTorrent.pm
+
+Correct Multitracker support
+
+Use the interval value sent in reply to announce
