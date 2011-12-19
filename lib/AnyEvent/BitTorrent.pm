@@ -106,7 +106,7 @@ has bitfield => (is         => 'ro',
                  init_arg   => undef,
                  lazy_build => 1
 );
-sub _build_bitfield { my $s = shift; pack 'b*', "\0" x $s->piece_count }
+sub _build_bitfield { pack 'b*', "\0" x shift->piece_count }
 sub wanted { ~shift->bitfield }
 
 sub _left {
@@ -203,7 +203,7 @@ sub _read {
     my ($s, $index, $offset, $length) = @_;
     my $data         = '';
     my $file_index   = 0;
-    my $total_offset = int(($index * $s->piece_length) + ($offset || 0));
+    my $total_offset = ($index * $s->piece_length) + $offset;
 SEARCH:
     while ($total_offset > $s->files->[$file_index]->{length}) {
         $total_offset -= $s->files->[$file_index]->{length};
@@ -288,6 +288,7 @@ sub hashcheck (;@) {
     my @indexes = @_ ? @_ : (0 .. $s->piece_count);
     $s->bitfield;    # Makes sure it's built
     for my $index (@indexes) {
+        next if $index < 0 || $index > $s->piece_count;
         my $piece = $s->_read($index,
                               0,
                               $index == $s->piece_count
@@ -297,10 +298,10 @@ sub hashcheck (;@) {
         );
         my $ok = defined($piece)
             && (substr($s->pieces, $index * 20, 20) eq sha1($piece));
+        vec($s->{bitfield}, $index, 1) = $ok;
         $ok ?
             $s->_trigger_hash_pass($index)
             : $s->_trigger_hash_fail($index);
-        vec($s->{bitfield}, $index, 1) = $ok;
     }
 }
 has peers => (
@@ -767,6 +768,7 @@ sub _request_pieces {
     use Scalar::Util qw[weaken];
     weaken $p;
     my $relevence = unpack('b*', $p->{bitfield}) & unpack('b*', $s->wanted);
+
     #use Data::Dump;
     my @indexes;
     if (scalar keys $s->working_pieces < 10) {    # XXX - Max working pieces
@@ -947,7 +949,7 @@ single file, for example).
 =back
 
 As pieces pass or fail, your C<on_hash_pass> and C<on_hash_fail> callbacks are
-called.
+triggered.
 
 =back
 
@@ -993,7 +995,7 @@ Returns the total amount downloaded from other peers.
 
 =item C<left( )>
 
-Returns the approximate amount (based on the pieces we still
+Returns the approximate amount based on the pieces we still
 L<want|/"wanted( )"> multiplied by the L<size of pieces|/"piece_length( )"> we
 still plan on downloading.
 
@@ -1014,7 +1016,7 @@ Returns a packed binary string in ascending order (ready for C<vec()>). Each
 index that the client has or simply does not want is set to zero and the rest
 are set to one.
 
-Currently, this is just C<~ $client->bitfield( )> but if your subclass has
+Currently, this is just C<< ~ $client->bitfield( ) >> but if your subclass has
 file based priorities, you could only 'want' the pieces which lie inside of
 the files you want.
 
@@ -1106,26 +1108,27 @@ Thanks.
 
 =head1 PeerID Specification
 
-L<AnyEvent::BitTorrent> may be identified in a swarm by its peer id, an of
-which looks like:
+L<AnyEvent::BitTorrent> may be identified in a swarm by its peer id. As of
+this version, our peer id looks sorta like:
 
     -AB0110-XXXXXXXXXXXX
 
 Where C<0110> are the Major (C<01>) and minor (C<10>) version numbers and the
-C<X> is filler.
+C<X>s are random filler.
 
 =head1 Bug Reports
 
 If email is better for you, L<my address is mentioned below|/"Author"> but I
-would rather issues be posted to the issue tracker found at
-http://github.com/sanko/anyevent-bittorrent/issues. Thanks!
+would rather have bugs sent through the issue tracker found at
+http://github.com/sanko/anyevent-bittorrent/issues.
 
 Please check the ToDo file included with this distribution in case your bug
-was discovered by me (...I probably won't file bug reports to myself).
+is already known (...I probably won't file bug reports to myself).
 
 =head1 See Also
 
-L<Net::BitTorrent::Protocol>
+L<Net::BitTorrent::Protocol> - The package which does all of the wire protocol
+level heavy lifting.
 
 =head1 Author
 
