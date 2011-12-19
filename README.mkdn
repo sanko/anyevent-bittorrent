@@ -69,7 +69,7 @@ This method expects...
         $client->hashcheck( );
 
 As pieces pass or fail, your `on_hash_pass` and `on_hash_fail` callbacks are
-called.
+triggered.
 
 In addition to these, there are several informational methods which do not
 trigger or modify any activity:
@@ -111,7 +111,7 @@ Returns the total amount downloaded from other peers.
 
 - `left( )`
 
-Returns the approximate amount (based on the pieces we still
+Returns the approximate amount based on the pieces we still
 [want](#wanted( )) multiplied by the [size of pieces](#piece_length( )) we
 still plan on downloading.
 
@@ -132,7 +132,7 @@ Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has or simply does not want is set to zero and the rest
 are set to one.
 
-Currently, this is just `~ $client-`bitfield( )> but if your subclass has
+Currently, this is just `~ $client->bitfield( )` but if your subclass has
 file based priorities, you could only 'want' the pieces which lie inside of
 the files you want.
 
@@ -213,26 +213,27 @@ Thanks.
 
 # PeerID Specification
 
-[AnyEvent::BitTorrent](http://search.cpan.org/perldoc?AnyEvent::BitTorrent) may be identified in a swarm by its peer id, an of
-which looks like:
+[AnyEvent::BitTorrent](http://search.cpan.org/perldoc?AnyEvent::BitTorrent) may be identified in a swarm by its peer id. As of
+this version, our peer id looks sorta like:
 
     -AB0110-XXXXXXXXXXXX
 
 Where `0110` are the Major (`01`) and minor (`10`) version numbers and the
-`X` is filler.
+`X`s are random filler.
 
 # Bug Reports
 
 If email is better for you, [my address is mentioned below](#Author) but I
-would rather issues be posted to the issue tracker found at
-http://github.com/sanko/anyevent-bittorrent/issues. Thanks!
+would rather have bugs sent through the issue tracker found at
+http://github.com/sanko/anyevent-bittorrent/issues.
 
 Please check the ToDo file included with this distribution in case your bug
-was discovered by me (...I probably won't file bug reports to myself).
+is already known (...I probably won't file bug reports to myself).
 
 # See Also
 
-[Net::BitTorrent::Protocol](http://search.cpan.org/perldoc?Net::BitTorrent::Protocol)
+[Net::BitTorrent::Protocol](http://search.cpan.org/perldoc?Net::BitTorrent::Protocol) - The package which does all of the wire protocol
+level heavy lifting.
 
 # Author
 
