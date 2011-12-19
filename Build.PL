@@ -12,48 +12,47 @@ my $mb
     = ($is_developer
        && require './_dev/Builder.pm' ? ('_dev::Builder') : 'Module::Build')
     ->new(
-    module_name => 'AnyEvent::BitTorrent',
-    license     => 'artistic_2',
-    dist_author => 'Sanko Robinson <sanko@cpan.org>',
-    requires    => {
-                 'Any::Moose'                => 0,
-                 'AnyEvent'                  => 0,
-                 'AnyEvent::HTTP'            => 0,
-                 'AnyEvent::Handle'          => 0,
-                 'AnyEvent::Socket'          => 0,
-                 'Digest::SHA'               => 0,
-                 Carp                        => 0,
-                 Exporter                    => 0,
-                 Fcntl                       => 0,
-                 'File::Path'                => 0,
-                 'File::Spec'                => 0,
-                 'Module::Build'             => 0.38,
-                 'Net::BitTorrent::Protocol' => '0.9.1',
-                 'Scalar::Util'              => 0,
-                 perl                        => '5.10.0'
-    },
-    build_requires => {'Module::Build' => 0.38,
-                       perl            => '5.10.0',
-                       'Test::More'    => 0,
-                       'File::Temp'    => 0
-    },
-    configure_requires => {'File::Find'    => 0,
-                           'Module::Build' => 0.38
-    },
-    test_files     => \@tests,
-    test_file_exts => ['.t'],
-    meta_merge     => {
-        keywords  => [qw[BitTorrent AnyEvent]],
-        resources => {
-            bugtracker =>
-                'http://github.com/sanko/anyevent-bittorrent/issues',
-            repository =>
-                'git://github.com/sanko/anyevent-bittorrent-protocol.git',
-            ChangeLog =>
-                'http://github.com/sanko/anyevent-bittorrent-protocol/commits/'
-        }
-    },
-    create_readme => 1
+       module_name => 'AnyEvent::BitTorrent',
+       license     => 'artistic_2',
+       dist_author => 'Sanko Robinson <sanko@cpan.org>',
+       requires    => {
+                    'Any::Moose'                => 0,
+                    'AnyEvent'                  => 0,
+                    'AnyEvent::HTTP'            => 0,
+                    'AnyEvent::Handle'          => 0,
+                    'AnyEvent::Socket'          => 0,
+                    'Digest::SHA'               => 0,
+                    Carp                        => 0,
+                    Exporter                    => 0,
+                    Fcntl                       => 0,
+                    'File::Path'                => 0,
+                    'File::Spec'                => 0,
+                    'Module::Build'             => 0.38,
+                    'Net::BitTorrent::Protocol' => '0.9.1',
+                    'Scalar::Util'              => 0,
+                    perl                        => '5.10.0'
+       },
+       build_requires => {'Module::Build' => 0.38,
+                          perl            => '5.10.0',
+                          'Test::More'    => 0,
+                          'File::Temp'    => 0
+       },
+       configure_requires => {'File::Find'    => 0,
+                              'Module::Build' => 0.38
+       },
+       test_files     => \@tests,
+       test_file_exts => ['.t'],
+       meta_merge     => {
+           keywords  => [qw[BitTorrent AnyEvent]],
+           resources => {
+               bugtracker =>
+                   'http://github.com/sanko/anyevent-bittorrent/issues',
+               repository => 'git://github.com/sanko/anyevent-bittorrent.git',
+               ChangeLog =>
+                   'http://github.com/sanko/anyevent-bittorrent/commits/'
+           }
+       },
+       create_readme => 1
     );
 $mb->notes(automated_testing => $automated_testing ? 1 : 0);
 $mb->notes(release_testing   => $is_developer);
