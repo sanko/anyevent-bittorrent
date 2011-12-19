@@ -8,7 +8,10 @@ my $automated_testing = $ENV{'AUTOMATED_TESTING'}
 my $is_developer = ((-d '.git') ? 1 : 0) or ($ENV{'RELEASE_TESTING'} ? 1 : 0);
 my @tests;
 find \&find_cb, qw[t/];
-my $mb = ($is_developer ? ('_dev::Builder') : 'Module::Build')->new(
+my $mb
+    = ($is_developer
+       && require './_dev/Builder.pm' ? ('_dev::Builder') : 'Module::Build')
+    ->new(
     module_name => 'AnyEvent::BitTorrent',
     license     => 'artistic_2',
     dist_author => 'Sanko Robinson <sanko@cpan.org>',
@@ -25,7 +28,7 @@ my $mb = ($is_developer ? ('_dev::Builder') : 'Module::Build')->new(
                  'File::Path'                => 0,
                  'File::Spec'                => 0,
                  'Module::Build'             => 0.38,
-                 'Net::BitTorrent::Protocol' => 0,
+                 'Net::BitTorrent::Protocol' => '0.9.1',
                  'Scalar::Util'              => 0,
                  perl                        => '5.10.0'
     },
@@ -51,7 +54,7 @@ my $mb = ($is_developer ? ('_dev::Builder') : 'Module::Build')->new(
         }
     },
     create_readme => 1
-);
+    );
 $mb->notes(automated_testing => $automated_testing ? 1 : 0);
 $mb->notes(release_testing   => $is_developer);
 $mb->notes(test_suite        => \@tests);
