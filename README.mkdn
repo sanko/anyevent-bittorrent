@@ -13,98 +13,98 @@ AnyEvent::BitTorrent - Yet Another BitTorrent Client Module
 This is a painfully simple BitTorrent client written on a whim that implements
 the absolute basics. For a full list of what's currently supported, what you
 will likely find in a future version, and what you'll never get from this, see
-the section entitled "[This Module is Lame!](#This Module is Lame!)"
+the section entitled "[This Module is Lame!](#This_Module_is_Lame!)"
 
 # Methods
 
 The API, much like the module itself, is simple.
 
-- `new( ... )`
+- [`new( ... )`][new(_..._)]
 
 This constructor understands the following arguments:
 
-    - `path`
+- [`path`][path]
 
-    This is the only required parameter. It's the path to a valid .torrent file.
+This is the only required parameter. It's the path to a valid .torrent file.
 
-    - `basedir`
+- [`basedir`][basedir]
 
-    This is the base directory all data will be stored in and/or read from.
-    Multifile torrents will create another directory below this to store all
-    files.
+This is the base directory all data will be stored in and/or read from.
+Multifile torrents will create another directory below this to store all
+files.
 
-    By default, this is the current working directory when
-    [`new( ... )`](#new( ... )) is called.
+By default, this is the current working directory when
+[`new( ... )`](#new(_..._)) is called.
 
-    - `port`
+- [`port`][port]
 
-    This is the preferred port local host binds and expects incoming peers to
-    connect to.
+This is the preferred port local host binds and expects incoming peers to
+connect to.
 
-    By default, this is a zero; the system will pick a port number randomly.
+By default, this is a zero; the system will pick a port number randomly.
 
-    - `on_hash_fail`
+- [`on_hash_fail`][on_hash_fail]
 
-    This is a subroutine called whenever a piece fails to pass
-    [hashcheck](#hashcheck( [...] )). The callback is handed the piece's index.
+This is a subroutine called whenever a piece fails to pass
+[hashcheck](#hashcheck(_[...]_)). The callback is handed the piece's index.
 
-    - `on_hash_pass`
+- [`on_hash_pass`][on_hash_pass]
 
-    This is a subroutine called whenever a piece passes its
-    [hashcheck](#hashcheck( [...] )). The callback is handed the piece's index.
+This is a subroutine called whenever a piece passes its
+[hashcheck](#hashcheck(_[...]_)). The callback is handed the piece's index.
 
-    - `state`
+- [`state`][state]
 
-    This must be one of the following:
+This must be one of the following:
 
-        - `started`
+- [`started`][started]
 
-        This is the default. The client will attempt to create new connections, make
-        and fill requests, etc. This is normal client behavior.
+This is the default. The client will attempt to create new connections, make
+and fill requests, etc. This is normal client behavior.
 
-        - `paused`
+- [`paused`][paused]
 
-        In this state, connections will be made and accepted but no piece requests
-        will be made or filled. To resume full, normal behavior, you must call
-        `[start( )](#start( ))`.
+In this state, connections will be made and accepted but no piece requests
+will be made or filled. To resume full, normal behavior, you must call
+[`start( )`](#start(_)).
 
-        - `stopped`
+- [`stopped`][stopped]
 
-        Everything is put on hold. No new outgoing connections are attempted and
-        incoming connections are rejected. To resume full, normal behavior, you must
-        call `[start( )](#start( ))`.
+Everything is put on hold. No new outgoing connections are attempted and
+incoming connections are rejected. To resume full, normal behavior, you must
+call [`start( )`](#start(_)).
 
-- `hashcheck( [...] )`
+- [`hashcheck( [...] )`][hashcheck(_[...]_)]
 
 This method expects...
 
-    - ...a list of integers. You could use this to check a range of pieces (a
-    single file, for example).
+- [...a list of integers. You could use this to check a range of pieces (a
+single file, for example).][...a_list_of_integers._You_could_use_this_to_check_a_range_of_pieces_(a_single_file,_for_example).]
 
-            $client->hashcheck( 1 .. 5, 34 .. 56 );
-    - ...a single integer. Only that specific piece is checked.
+    $client->hashcheck( 1 .. 5, 34 .. 56 );
+- [...a single integer. Only that specific piece is checked.][...a_single_integer._Only_that_specific_piece_is_checked.]
 
-            $client->hashcheck( 17 );
-    - ...nothing. All data related to this torrent will be checked.
+    $client->hashcheck( 17 );
+- [...nothing. All data related to this torrent will be checked.][...nothing._All_data_related_to_this_torrent_will_be_checked.]
 
-        $client->hashcheck( );
+    $client->hashcheck( );
 
 As pieces pass or fail, your `on_hash_pass` and `on_hash_fail` callbacks are
 triggered.
 
-- `start( )`
+- [`start( )`][start(_)]
 
 Sends a 'started' event to trackers and starts performing as a client is
 expected. New connections are made and accepted, requests are made and filled,
 etc.
 
-- `stop( )`
+- [`stop( )`][stop(_)]
 
 Sends a stopped event to trackers, closes all connections, stops attempting
 new outgoing connections, rejects incoming connections and closes all open
 files.
 
-- `pause( )`
+- [`pause( )`][pause(_)]
 
 The client remains mostly active; new connections will be made and accepted,
 etc. but no requests will be made or filled while the client is paused.
@@ -112,58 +112,58 @@ etc. but no requests will be made or filled while the client is paused.
 In addition to these, there are several informational methods which do not
 trigger or modify any activity:
 
-- `infohash( )`
+- [`infohash( )`][infohash(_)]
 
 Returns the 20-byte SHA1 hash of the value of the info key from the metadata
 file.
 
-- `peerid( )`
+- [`peerid( )`][peerid(_)]
 
 Returns the 20 byte string used to identify the client. Please see the
-[spec](#Peer ID Specification) below.
+[spec](#Peer_ID_Specification) below.
 
-- `port( )`
+- [`port( )`][port(_)]
 
 Returns the port number the client is listening on.
 
-- `size( )`
+- [`size( )`][size(_)]
 
-Returns the total size of all [files](#files( )) described in the torrent's
+Returns the total size of all [files](#files(_)) described in the torrent's
 metadata.
 
 Note that this value is recalculated every time you call this method. If you
 need it more than occasionally, it may be best to cache it yourself.
 
-- `name( )`
+- [`name( )`][name(_)]
 
 Returns the UTF-8 encoded string the metadata suggests we save the file (or
 directory, in the case of multi-file torrents) under.
 
-- `uploaded( )`
+- [`uploaded( )`][uploaded(_)]
 
 Returns the total amount uploaded to remote peers.
 
-- `downloaded( )`
+- [`downloaded( )`][downloaded(_)]
 
 Returns the total amount downloaded from other peers.
 
-- `left( )`
+- [`left( )`][left(_)]
 
 Returns the approximate amount based on the pieces we still
-[want](#wanted( )) multiplied by the [size of pieces](#piece_length( )).
+[want](#wanted(_)) multiplied by the [size of pieces](#piece_length(_)).
 
-- `piece_length( )`
+- [`piece_length( )`][piece_length(_)]
 
 Returns the number of bytes in each piece the file or files are split into.
 For the purposes of transfer, files are split into fixed-size pieces which are
 all the same length except for possibly the last one which may be truncated.
 
-- `bitfield( )`
+- [`bitfield( )`][bitfield(_)]
 
 Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has is set to one and the rest are set to zero.
 
-- `wanted( )`
+- [`wanted( )`][wanted(_)]
 
 Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has or simply does not want is set to zero and the rest
@@ -173,29 +173,29 @@ Currently, this is just `~ $client->bitfield( )` but if your subclass has
 file based priorities, you could only 'want' the pieces which lie inside of
 the files you want.
 
-- `files( )`
+- [`files( )`][files(_)]
 
 Returns a list of hash references with the following keys:
 
-    - `length`
+- [`length`][length]
 
-    Which is the size of file in bytes.
+Which is the size of file in bytes.
 
-    - `path`
+- [`path`][path]
 
-    Which is the absolute path of the file.
+Which is the absolute path of the file.
 
-- `peers( )`
+- [`peers( )`][peers(_)]
 
 Returns the list of currently connected peers. The organization of these peers
 is not yet final so... don't write anything you don't expect to break before
 we hit `v1.0.0`.
 
-- `state( )`
+- [`state( )`][state(_)]
 
-Returns `active` if the client is [started](#start( )), `paused` if client
-is [paused](#pause( )), and `stopped` if the client is currently
-[stopped](#stop( )).
+Returns `active` if the client is [started](#start(_)), `paused` if client
+is [paused](#pause(_)), and `stopped` if the client is currently
+[stopped](#stop(_)).
 
 Anything you find by skimming the source is likely not ready for public use
 and will be subject to change before `v1.0.0`.
@@ -236,14 +236,14 @@ If you're reading all of this with a scowl, there are many alternatives to
 this module, most of which are sure to be better suited for advanced users. I
 suggest (in no particular order):
 
-- [BitFlu](http://bitflu.workaround.ch/). It's written in Perl but you'll
-still need to be on a Linux, *BSD, et al. system to use it.
-- [Net::BitTorrent](http://search.cpan.org/perldoc?Net::BitTorrent) ...in the future. I _do not_ suggest using either
+- [[BitFlu](http://bitflu.workaround.ch/). It's written in Perl but you'll
+still need to be on a Linux, *BSD, et al. system to use it.][[BitFlu](http://bitflu.workaround.ch/)._It's_written_in_Perl_but_you'll_still_need_to_be_on_a_Linux,_*BSD,_et_al._system_to_use_it.]
+- [[Net::BitTorrent](http://search.cpan.org/perldoc?Net::BitTorrent) ...in the future. I _do not_ suggest using either
 the current stable or unstable versions found on CPAN. The next version is
-being worked on and will be based on [Reflex](http://search.cpan.org/perldoc?Reflex).
+being worked on and will be based on [Reflex](http://search.cpan.org/perldoc?Reflex).][[Net::BitTorrent](http://search.cpan.org/perldoc?Net::BitTorrent)_...in_the_future._I__do_not__suggest_using_either_the_current_stable_or_unstable_versions_found_on_CPAN._The_next_version_is_being_worked_on_and_will_be_based_on_[Reflex](http://search.cpan.org/perldoc?Reflex).]
 
 If you're working on a Perl based client and would like me to link to it, send
-a bug report to the tracker [listed below](#Bug Reports).
+a bug report to the tracker [listed below](#Bug_Reports).
 
 # Subclassing AnyEvent::BitTorrent
 

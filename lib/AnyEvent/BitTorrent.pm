@@ -1024,13 +1024,13 @@ and fill requests, etc. This is normal client behavior.
 
 In this state, connections will be made and accepted but no piece requests
 will be made or filled. To resume full, normal behavior, you must call
-C<L<start( )|/"start( )">>.
+L<C<start( )>|/"start( )">.
 
 =item C<stopped>
 
 Everything is put on hold. No new outgoing connections are attempted and
 incoming connections are rejected. To resume full, normal behavior, you must
-call C<L<start( )|/"start( )">>.
+call L<C<start( )>|/"start( )">.
 
 =back
 
