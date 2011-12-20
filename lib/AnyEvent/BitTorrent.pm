@@ -306,8 +306,10 @@ sub hashcheck (;@) {
 }
 has peers => (
     is      => 'ro',
-    isa     => 'HashRef[HashRef]',
-    default => sub { {} }
+    isa     => 'HashRef',
+    lazy    => 1,
+    clearer => '_clear_peers',
+    builder => '_build_peers'
 
         # { handle            => AnyEvent::Handle
         #   peerid            => 'Str'
@@ -323,6 +325,7 @@ has peers => (
         #   keepalive         => AnyEvent::timer
         # }
 );
+sub _build_peers { {} }
 
 sub _add_peer {
     my ($s, $h) = @_;
@@ -381,56 +384,56 @@ has trackers => (
 );
 
 # Timers
-has _tracker_timer => (
-    is       => 'bare',
-    isa      => 'Ref',
-    init_arg => undef,
-    required => 1,
-    default  => sub {
-        my $s = shift;
-        AE::timer(
-            1,
-            15 * 60,
-            sub {
-                for my $tier (@{$s->trackers}) {
-
-                    #ddx $tier;
-                    next if $tier->[0] !~ m[^https?://.+];
-                    http_get $tier->[0] . '?info_hash=' . sub {
-                        local $_ = shift;
-                        s/([\W])/"%" . uc(sprintf("%2.2x",ord($1)))/eg;
-                        $_;
-                        }
-                        ->($s->infohash)
-                        . ('&peer_id=' . $s->peerid)
-                        . ('&uploaded=' . $s->uploaded)
-                        . ('&downloaded=' . $s->downloaded)
-                        . ('&left=' . $s->_left)
-                        . ('&port=' . $s->port)
-                        . '&compact=1', sub {
-
-                        #use Data::Dump;
-                        #ddx \@_;
-                        my ($body, $hdr) = @_;
-                        if ($hdr->{Status} =~ /^2/) {
-                            my $reply = bdecode($body);
-                            $s->_set_peer_cache(
-                                      compact_ipv4(
-                                          uncompact_ipv4(
-                                              $s->peer_cache . $reply->{peers}
-                                          )
-                                      )
-                            );
-                        }
-                        else {
-                            print "error, $hdr->{Status} $hdr->{Reason}\n";
-                        }
-                        }
-                }
-            }
-        );
-    }
+has _tracker_timer => (is       => 'ro',
+                       isa      => 'Ref',
+                       init_arg => undef,
+                       lazy     => 1,
+                       clearer  => '_clear_tracker_timer',
+                       builder  => '_build_tracker_timer'
 );
+
+sub _build_tracker_timer {
+    my $s = shift;
+    AE::timer(1, 15 * 60, sub { $s->announce() });
+}
+
+sub announce {
+    my ($s, $e) = @_;
+    for my $tier (@{$s->trackers}) {
+
+        #ddx $tier;
+        next if $tier->[0] !~ m[^https?://.+];
+        http_get $tier->[0] . '?info_hash=' . sub {
+            local $_ = shift;
+            s/([\W])/"%" . uc(sprintf("%2.2x",ord($1)))/eg;
+            $_;
+            }
+            ->($s->infohash)
+            . ('&peer_id=' . $s->peerid)
+            . ('&uploaded=' . $s->uploaded)
+            . ('&downloaded=' . $s->downloaded)
+            . ('&left=' . $s->_left)
+            . ('&port=' . $s->port)
+            . '&compact=1'
+            . ($e ? '&event=' . $e : ''), sub {
+
+            #use Data::Dump;
+            #ddx \@_;
+            my ($body, $hdr) = @_;
+            if ($hdr->{Status} =~ /^2/) {
+                my $reply = bdecode($body);
+                $s->_set_peer_cache(
+                          compact_ipv4(
+                              uncompact_ipv4($s->peer_cache . $reply->{peers})
+                          )
+                );
+            }
+            else {
+                print "error, $hdr->{Status} $hdr->{Reason}\n";
+            }
+            }
+    }
+}
 has _choke_timer => (
     is       => 'bare',
     isa      => 'Ref',
@@ -495,69 +498,71 @@ has _fill_requests_timer => (
         );
     }
 );
-has _peer_timer => (
-    is       => 'bare',
-    isa      => 'Ref',
-    init_arg => undef,
-    required => 1,
-    default  => sub {
-        my $s = shift;
-        AE::timer(
-            1, 15,
-            sub {
-                return if !$s->_left;
+has _peer_timer => (is       => 'ro',
+                    isa      => 'Ref',
+                    init_arg => undef,
+                    lazy     => 1,
+                    clearer  => '_clear_peer_timer',
+                    builder  => '_build_peer_timer'
+);
 
-                # XXX - Initiate connections when we are in Super seed mode?
-                my @cache = uncompact_ipv4($s->peer_cache);
-                return if !@cache;
-                for my $i (1 .. @cache) {
-                    last if $i > 10;    # XXX - Max half open
-                    last
-                        if scalar(keys %{$s->peers}) > 100;  # XXX - Max peers
-                    my $addr = splice @cache, rand $#cache, 1;
-                    my $handle;
-                    $handle = AnyEvent::Handle->new(
-                        connect    => $addr,
-                        on_prepare => sub {60},
-                        on_error   => sub {
-                            my ($hdl, $fatal, $msg) = @_;
+sub _build_peer_timer {
+    my $s = shift;
+    AE::timer(
+        1, 15,
+        sub {
+            return if !$s->_left;
 
-                            # XXX - callback
-                            #AE::log error => "got error $msg\n";
-                            $s->_del_peer($hdl);
-                        },
-                        on_connect_error => sub {
-                            my ($hdl, $fatal, $msg) = @_;
-                            $s->_del_peer($hdl);
+            # XXX - Initiate connections when we are in Super seed mode?
+            my @cache = uncompact_ipv4($s->peer_cache);
+            return if !@cache;
+            for my $i (1 .. @cache) {
+                last if $i > 10;    # XXX - Max half open
+                last
+                    if scalar(keys %{$s->peers}) > 100;    # XXX - Max peers
+                my $addr = splice @cache, rand $#cache, 1;
+                my $handle;
+                $handle = AnyEvent::Handle->new(
+                    connect    => $addr,
+                    on_prepare => sub {60},
+                    on_error   => sub {
+                        my ($hdl, $fatal, $msg) = @_;
 
-                            # XXX - callback
-                            #AE::log
-                            #    error => sprintf "%sfatal error (%s)\n",
-                            #    $fatal ? '' : 'non-',
-                            #    $msg // 'Connection timed out';
-                            return if !$fatal;
-                        },
-                        on_connect => sub {
-                            my ($h, $host, $port, $retry) = @_;
-                            $s->_add_peer($handle);
-                            $handle->push_write(
+                        # XXX - callback
+                        #AE::log error => "got error $msg\n";
+                        $s->_del_peer($hdl);
+                    },
+                    on_connect_error => sub {
+                        my ($hdl, $fatal, $msg) = @_;
+                        $s->_del_peer($hdl);
+
+                        # XXX - callback
+                        #AE::log
+                        #    error => sprintf "%sfatal error (%s)\n",
+                        #    $fatal ? '' : 'non-',
+                        #    $msg // 'Connection timed out';
+                        return if !$fatal;
+                    },
+                    on_connect => sub {
+                        my ($h, $host, $port, $retry) = @_;
+                        $s->_add_peer($handle);
+                        $handle->push_write(
                                          build_handshake(
                                              "\0\0\0\0\0\0\0\0", $s->infohash,
                                              $s->peerid
                                          )
-                            );
-                        },
-                        on_eof => sub {
-                            my $h = shift;
-                            $s->_del_peer($h);
-                        },
-                        on_read => sub { $s->_on_read(@_) }
-                    );
-                }
+                        );
+                    },
+                    on_eof => sub {
+                        my $h = shift;
+                        $s->_del_peer($h);
+                    },
+                    on_read => sub { $s->_on_read(@_) }
+                );
             }
-        );
-    }
-);
+        }
+    );
+}
 
 sub _on_read_incoming {
     my ($s, $h) = @_;
@@ -740,8 +745,7 @@ sub _broadcast {
 
 sub _consider_peer {    # Figure out whether or not we find a peer interesting
     my ($s, $p) = @_;
-    my $relevence
-        = unpack('b*', $p->{bitfield}) & ~unpack('b*', $s->bitfield);
+    my $relevence = unpack('b*', $p->{bitfield}) & unpack('b*', $s->wanted);
     my $interesting = (index(unpack('b*', $relevence), 1, 0) != -1) ? 1 : 0;
     if ($interesting) {
         if (!$p->{local_interested}) {
