@@ -767,11 +767,12 @@ sub _request_pieces {
     my ($s, $p) = @_;
     use Scalar::Util qw[weaken];
     weaken $p;
+    $p // return;
     my $relevence = unpack('b*', $p->{bitfield}) & unpack('b*', $s->wanted);
 
     #use Data::Dump;
     my @indexes;
-    if (scalar keys $s->working_pieces < 10) {    # XXX - Max working pieces
+    if (scalar keys %{$s->working_pieces} < 10) {   # XXX - Max working pieces
         my $x = -1;
         @indexes = map { $x++; $_ ? $x : () } split '', $relevence;
     }
