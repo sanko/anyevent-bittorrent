@@ -43,8 +43,8 @@ sub _build_socket {
     my $s = shift;
     tcp_server undef, $s->port, sub {
         my ($fh, $host, $port) = @_;
-        warn sprintf 'New Peer!!!! %s:%d', $host, $port;
-        my $handle = AnyEvent::Handle->new(
+        return $fh->destroy if $s->state eq 'stopped';
+         my $handle = AnyEvent::Handle->new(
             fh       => $fh,
             on_error => sub {
                 my ($hdl, $fatal, $msg) = @_;
