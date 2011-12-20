@@ -61,22 +61,22 @@ This is a subroutine called whenever a piece passes its
 
 This must be one of the following:
 
-    - `started`
+- `started`
 
-    This is the default. The client will attempt to create new connections, make
-    and fill requests, etc. This is normal client behavior.
+This is the default. The client will attempt to create new connections, make
+and fill requests, etc. This is normal client behavior.
 
-    - `paused`
+- `paused`
 
-    In this state, connections will be made and accepted but no piece requests
-    will be made or filled. To resume full, normal behavior, you must call
-    [`start( )`](#start___).
+In this state, connections will be made and accepted but no piece requests
+will be made or filled. To resume full, normal behavior, you must call
+[`start( )`](#start___).
 
-    - `stopped`
+- `stopped`
 
-    Everything is put on hold. No new outgoing connections are attempted and
-    incoming connections are rejected. To resume full, normal behavior, you must
-    call [`start( )`](#start___).
+Everything is put on hold. No new outgoing connections are attempted and
+incoming connections are rejected. To resume full, normal behavior, you must
+call [`start( )`](#start___).
 
 ## <a name="_hashcheck__________" title="Permalink to '`hashcheck( [...] )`'">`hashcheck( [...] )`</a>
 
