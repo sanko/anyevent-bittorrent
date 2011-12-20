@@ -13,7 +13,7 @@ AnyEvent::BitTorrent - Yet Another BitTorrent Client Module
 This is a painfully simple BitTorrent client written on a whim that implements
 the absolute basics. For a full list of what's currently supported, what you
 will likely find in a future version, and what you'll never get from this, see
-the section entitled "[This Module is Lame!](#This_Module_is_Lame!)"
+the section entitled "[This Module is Lame!](#This_Module_is_Lame_)"
 
 # <a name="Methods" title="Permalink to 'Methods'">Methods</a>
 
@@ -23,7 +23,7 @@ Anything you find by skimming the source is likely not ready for public use
 and will be subject to change before `v1.0.0`. Here's the public interface as
 of this version:
 
-## <a name="new(_..._)" title="Permalink to '`new( ... )`'">`new( ... )`</a>
+## <a name="_new________" title="Permalink to '`new( ... )`'">`new( ... )`</a>
 
 This constructor understands the following arguments:
 
@@ -38,7 +38,7 @@ Multifile torrents will create another directory below this to store all
 files.
 
 By default, this is the current working directory when
-[`new( ... )`](#new(_..._)) is called.
+[`new( ... )`](#new_______) is called.
 
 - `port`
 
@@ -50,12 +50,12 @@ By default, this is a zero; the system will pick a port number randomly.
 - `on_hash_fail`
 
 This is a subroutine called whenever a piece fails to pass
-[hashcheck](#hashcheck(_[...]_)). The callback is handed the piece's index.
+[hashcheck](#hashcheck_________). The callback is handed the piece's index.
 
 - `on_hash_pass`
 
 This is a subroutine called whenever a piece passes its
-[hashcheck](#hashcheck(_[...]_)). The callback is handed the piece's index.
+[hashcheck](#hashcheck_________). The callback is handed the piece's index.
 
 - `state`
 
@@ -70,15 +70,15 @@ This must be one of the following:
 
     In this state, connections will be made and accepted but no piece requests
     will be made or filled. To resume full, normal behavior, you must call
-    [`start( )`](#start(_)).
+    [`start( )`](#start___).
 
     - `stopped`
 
     Everything is put on hold. No new outgoing connections are attempted and
     incoming connections are rejected. To resume full, normal behavior, you must
-    call [`start( )`](#start(_)).
+    call [`start( )`](#start___).
 
-## <a name="hashcheck(_[...]_)" title="Permalink to '`hashcheck( [...] )`'">`hashcheck( [...] )`</a>
+## <a name="_hashcheck__________" title="Permalink to '`hashcheck( [...] )`'">`hashcheck( [...] )`</a>
 
 This method expects...
 
@@ -96,75 +96,75 @@ single file, for example).
 As pieces pass or fail, your `on_hash_pass` and `on_hash_fail` callbacks are
 triggered.
 
-## <a name="start(_)" title="Permalink to '`start( )`'">`start( )`</a>
+## <a name="_start____" title="Permalink to '`start( )`'">`start( )`</a>
 
 Sends a 'started' event to trackers and starts performing as a client is
 expected. New connections are made and accepted, requests are made and filled,
 etc.
 
-## <a name="stop(_)" title="Permalink to '`stop( )`'">`stop( )`</a>
+## <a name="_stop____" title="Permalink to '`stop( )`'">`stop( )`</a>
 
 Sends a stopped event to trackers, closes all connections, stops attempting
 new outgoing connections, rejects incoming connections and closes all open
 files.
 
-## <a name="pause(_)" title="Permalink to '`pause( )`'">`pause( )`</a>
+## <a name="_pause____" title="Permalink to '`pause( )`'">`pause( )`</a>
 
 The client remains mostly active; new connections will be made and accepted,
 etc. but no requests will be made or filled while the client is paused.
 
-## <a name="infohash(_)" title="Permalink to '`infohash( )`'">`infohash( )`</a>
+## <a name="_infohash____" title="Permalink to '`infohash( )`'">`infohash( )`</a>
 
 Returns the 20-byte SHA1 hash of the value of the info key from the metadata
 file.
 
-## <a name="peerid(_)" title="Permalink to '`peerid( )`'">`peerid( )`</a>
+## <a name="_peerid____" title="Permalink to '`peerid( )`'">`peerid( )`</a>
 
 Returns the 20 byte string used to identify the client. Please see the
 [spec](#PeerID_Specification) below.
 
-## <a name="port(_)" title="Permalink to '`port( )`'">`port( )`</a>
+## <a name="_port____" title="Permalink to '`port( )`'">`port( )`</a>
 
 Returns the port number the client is listening on.
 
-## <a name="size(_)" title="Permalink to '`size( )`'">`size( )`</a>
+## <a name="_size____" title="Permalink to '`size( )`'">`size( )`</a>
 
-Returns the total size of all [files](#files(_)) described in the torrent's
+Returns the total size of all [files](#files___) described in the torrent's
 metadata.
 
 Note that this value is recalculated every time you call this method. If you
 need it more than occasionally, it may be best to cache it yourself.
 
-## <a name="name(_)" title="Permalink to '`name( )`'">`name( )`</a>
+## <a name="_name____" title="Permalink to '`name( )`'">`name( )`</a>
 
 Returns the UTF-8 encoded string the metadata suggests we save the file (or
 directory, in the case of multi-file torrents) under.
 
-## <a name="uploaded(_)" title="Permalink to '`uploaded( )`'">`uploaded( )`</a>
+## <a name="_uploaded____" title="Permalink to '`uploaded( )`'">`uploaded( )`</a>
 
 Returns the total amount uploaded to remote peers.
 
-## <a name="downloaded(_)" title="Permalink to '`downloaded( )`'">`downloaded( )`</a>
+## <a name="_downloaded____" title="Permalink to '`downloaded( )`'">`downloaded( )`</a>
 
 Returns the total amount downloaded from other peers.
 
-## <a name="left(_)" title="Permalink to '`left( )`'">`left( )`</a>
+## <a name="_left____" title="Permalink to '`left( )`'">`left( )`</a>
 
 Returns the approximate amount based on the pieces we still
-[want](#wanted(_)) multiplied by the [size of pieces](#piece_length(_)).
+[want](#wanted___) multiplied by the [size of pieces](#piece_length___).
 
-## <a name="piece_length(_)" title="Permalink to '`piece_length( )`'">`piece_length( )`</a>
+## <a name="_piece_length____" title="Permalink to '`piece_length( )`'">`piece_length( )`</a>
 
 Returns the number of bytes in each piece the file or files are split into.
 For the purposes of transfer, files are split into fixed-size pieces which are
 all the same length except for possibly the last one which may be truncated.
 
-## <a name="bitfield(_)" title="Permalink to '`bitfield( )`'">`bitfield( )`</a>
+## <a name="_bitfield____" title="Permalink to '`bitfield( )`'">`bitfield( )`</a>
 
 Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has is set to one and the rest are set to zero.
 
-## <a name="wanted(_)" title="Permalink to '`wanted( )`'">`wanted( )`</a>
+## <a name="_wanted____" title="Permalink to '`wanted( )`'">`wanted( )`</a>
 
 Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has or simply does not want is set to zero and the rest
@@ -174,7 +174,7 @@ Currently, this is just `~ $client->bitfield( )` but if your subclass has
 file based priorities, you could only 'want' the pieces which lie inside of
 the files you want.
 
-## <a name="files(_)" title="Permalink to '`files( )`'">`files( )`</a>
+## <a name="_files____" title="Permalink to '`files( )`'">`files( )`</a>
 
 Returns a list of hash references with the following keys:
 
@@ -186,19 +186,19 @@ Which is the size of file in bytes.
 
 Which is the absolute path of the file.
 
-## <a name="peers(_)" title="Permalink to '`peers( )`'">`peers( )`</a>
+## <a name="_peers____" title="Permalink to '`peers( )`'">`peers( )`</a>
 
 Returns the list of currently connected peers. The organization of these peers
 is not yet final so... don't write anything you don't expect to break before
 we hit `v1.0.0`.
 
-## <a name="state(_)" title="Permalink to '`state( )`'">`state( )`</a>
+## <a name="_state____" title="Permalink to '`state( )`'">`state( )`</a>
 
-Returns `active` if the client is [started](#start(_)), `paused` if client
-is [paused](#pause(_)), and `stopped` if the client is currently
-[stopped](#stop(_)).
+Returns `active` if the client is [started](#start___), `paused` if client
+is [paused](#pause___), and `stopped` if the client is currently
+[stopped](#stop___).
 
-# <a name="This_Module_is_Lame!" title="Permalink to 'This Module is Lame!'">This Module is Lame!</a>
+# <a name="This_Module_is_Lame_" title="Permalink to 'This Module is Lame!'">This Module is Lame!</a>
 
 Yeah, I said it.
 
@@ -208,13 +208,13 @@ order to interact with other clients in a modern day swarm.
 minimum but it's based on [Moose](http://search.cpan.org/perldoc?Moose) or [Mouse](http://search.cpan.org/perldoc?Mouse) so you could always
 subclass it to add more advanced functionality. Hint, hint!
 
-## <a name="What_is_currently_supported?" title="Permalink to 'What is currently supported?'">What is currently supported?</a>
+## <a name="What_is_currently_supported_" title="Permalink to 'What is currently supported?'">What is currently supported?</a>
 
 Basic stuff. We can make and handle piece requests. Deal with cancels,
 disconnect idle peers, unchoke folks. Normal... stuff. HTTP trackers are
 supported but do not perform according to spec yet.
 
-## <a name="What_will_probably_be_supported_in_the_future?" title="Permalink to 'What will probably be supported in the future?'">What will probably be supported in the future?</a>
+## <a name="What_will_probably_be_supported_in_the_future_" title="Permalink to 'What will probably be supported in the future?'">What will probably be supported in the future?</a>
 
 DHT (which will likely be in a separate dist), fast extensions, multi-tracker
 extensions, IPv6 stuff, file download priorities... I'll get around to those.
@@ -223,12 +223,12 @@ Long term, UDP trackers may be supported.
 
 For a detailed list, see the ToDo file included with this distribution.
 
-## <a name="What_will_likely_never_be_supported?" title="Permalink to 'What will likely never be supported?'">What will likely never be supported?</a>
+## <a name="What_will_likely_never_be_supported_" title="Permalink to 'What will likely never be supported?'">What will likely never be supported?</a>
 
 We can't have nice things. Protocol encryption, uTP, endgame tricks, ...these
 will probably never be included in [AnyEvent::BitTorrent](http://search.cpan.org/perldoc?AnyEvent::BitTorrent).
 
-## <a name="What_should_I_use_instead?" title="Permalink to 'What should I use instead?'">What should I use instead?</a>
+## <a name="What_should_I_use_instead_" title="Permalink to 'What should I use instead?'">What should I use instead?</a>
 
 If you're reading all of this with a scowl, there are many alternatives to
 this module, most of which are sure to be better suited for advanced users. I
@@ -243,7 +243,7 @@ being worked on and will be based on [Reflex](http://search.cpan.org/perldoc?Ref
 If you're working on a Perl based client and would like me to link to it, send
 a bug report to the tracker [listed below](#Bug_Reports).
 
-# <a name="Subclassing_AnyEvent::BitTorrent" title="Permalink to 'Subclassing AnyEvent::BitTorrent'">Subclassing AnyEvent::BitTorrent</a>
+# <a name="Subclassing_AnyEvent__BitTorrent" title="Permalink to 'Subclassing AnyEvent::BitTorrent'">Subclassing AnyEvent::BitTorrent</a>
 
 TODO
 
