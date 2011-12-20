@@ -1,21 +1,21 @@
-# NAME <a id="NAME" title="Permalink to 'NAME'">&sect;</a>
+# NAME <a name="NAME" title="Permalink to 'NAME'">&sect;</a>
 
 AnyEvent::BitTorrent - Yet Another BitTorrent Client Module
 
-# Synopsis <a id="Synopsis" title="Permalink to 'Synopsis'">&sect;</a>
+# Synopsis <a name="Synopsis" title="Permalink to 'Synopsis'">&sect;</a>
 
     use AnyEvent::BitTorrent;
     my $client = AnyEvent::BitTorrent->new( path => 'some.torrent' );
     AE::cv->recv;
 
-# Description <a id="Description" title="Permalink to 'Description'">&sect;</a>
+# Description <a name="Description" title="Permalink to 'Description'">&sect;</a>
 
 This is a painfully simple BitTorrent client written on a whim that implements
 the absolute basics. For a full list of what's currently supported, what you
 will likely find in a future version, and what you'll never get from this, see
 the section entitled "[This Module is Lame!](#This_Module_is_Lame!)"
 
-# Methods <a id="Methods" title="Permalink to 'Methods'">&sect;</a>
+# Methods <a name="Methods" title="Permalink to 'Methods'">&sect;</a>
 
 The API, much like the module itself, is simple.
 
@@ -23,7 +23,7 @@ Anything you find by skimming the source is likely not ready for public use
 and will be subject to change before `v1.0.0`. Here's the public interface as
 of this version:
 
-## `new( ... )` <a id="new(_..._)" title="Permalink to '`new( ... )`'">&sect;</a>
+## `new( ... )` <a name="new(_..._)" title="Permalink to '`new( ... )`'">&sect;</a>
 
 This constructor understands the following arguments:
 
@@ -78,7 +78,7 @@ This must be one of the following:
     incoming connections are rejected. To resume full, normal behavior, you must
     call [`start( )`](#start(_)).
 
-## `hashcheck( [...] )` <a id="hashcheck(_[...]_)" title="Permalink to '`hashcheck( [...] )`'">&sect;</a>
+## `hashcheck( [...] )` <a name="hashcheck(_[...]_)" title="Permalink to '`hashcheck( [...] )`'">&sect;</a>
 
 This method expects...
 
@@ -96,38 +96,38 @@ single file, for example).
 As pieces pass or fail, your `on_hash_pass` and `on_hash_fail` callbacks are
 triggered.
 
-## `start( )` <a id="start(_)" title="Permalink to '`start( )`'">&sect;</a>
+## `start( )` <a name="start(_)" title="Permalink to '`start( )`'">&sect;</a>
 
 Sends a 'started' event to trackers and starts performing as a client is
 expected. New connections are made and accepted, requests are made and filled,
 etc.
 
-## `stop( )` <a id="stop(_)" title="Permalink to '`stop( )`'">&sect;</a>
+## `stop( )` <a name="stop(_)" title="Permalink to '`stop( )`'">&sect;</a>
 
 Sends a stopped event to trackers, closes all connections, stops attempting
 new outgoing connections, rejects incoming connections and closes all open
 files.
 
-## `pause( )` <a id="pause(_)" title="Permalink to '`pause( )`'">&sect;</a>
+## `pause( )` <a name="pause(_)" title="Permalink to '`pause( )`'">&sect;</a>
 
 The client remains mostly active; new connections will be made and accepted,
 etc. but no requests will be made or filled while the client is paused.
 
-## `infohash( )` <a id="infohash(_)" title="Permalink to '`infohash( )`'">&sect;</a>
+## `infohash( )` <a name="infohash(_)" title="Permalink to '`infohash( )`'">&sect;</a>
 
 Returns the 20-byte SHA1 hash of the value of the info key from the metadata
 file.
 
-## `peerid( )` <a id="peerid(_)" title="Permalink to '`peerid( )`'">&sect;</a>
+## `peerid( )` <a name="peerid(_)" title="Permalink to '`peerid( )`'">&sect;</a>
 
 Returns the 20 byte string used to identify the client. Please see the
 [spec](#PeerID_Specification) below.
 
-## `port( )` <a id="port(_)" title="Permalink to '`port( )`'">&sect;</a>
+## `port( )` <a name="port(_)" title="Permalink to '`port( )`'">&sect;</a>
 
 Returns the port number the client is listening on.
 
-## `size( )` <a id="size(_)" title="Permalink to '`size( )`'">&sect;</a>
+## `size( )` <a name="size(_)" title="Permalink to '`size( )`'">&sect;</a>
 
 Returns the total size of all [files](#files(_)) described in the torrent's
 metadata.
@@ -135,36 +135,36 @@ metadata.
 Note that this value is recalculated every time you call this method. If you
 need it more than occasionally, it may be best to cache it yourself.
 
-## `name( )` <a id="name(_)" title="Permalink to '`name( )`'">&sect;</a>
+## `name( )` <a name="name(_)" title="Permalink to '`name( )`'">&sect;</a>
 
 Returns the UTF-8 encoded string the metadata suggests we save the file (or
 directory, in the case of multi-file torrents) under.
 
-## `uploaded( )` <a id="uploaded(_)" title="Permalink to '`uploaded( )`'">&sect;</a>
+## `uploaded( )` <a name="uploaded(_)" title="Permalink to '`uploaded( )`'">&sect;</a>
 
 Returns the total amount uploaded to remote peers.
 
-## `downloaded( )` <a id="downloaded(_)" title="Permalink to '`downloaded( )`'">&sect;</a>
+## `downloaded( )` <a name="downloaded(_)" title="Permalink to '`downloaded( )`'">&sect;</a>
 
 Returns the total amount downloaded from other peers.
 
-## `left( )` <a id="left(_)" title="Permalink to '`left( )`'">&sect;</a>
+## `left( )` <a name="left(_)" title="Permalink to '`left( )`'">&sect;</a>
 
 Returns the approximate amount based on the pieces we still
 [want](#wanted(_)) multiplied by the [size of pieces](#piece_length(_)).
 
-## `piece_length( )` <a id="piece_length(_)" title="Permalink to '`piece_length( )`'">&sect;</a>
+## `piece_length( )` <a name="piece_length(_)" title="Permalink to '`piece_length( )`'">&sect;</a>
 
 Returns the number of bytes in each piece the file or files are split into.
 For the purposes of transfer, files are split into fixed-size pieces which are
 all the same length except for possibly the last one which may be truncated.
 
-## `bitfield( )` <a id="bitfield(_)" title="Permalink to '`bitfield( )`'">&sect;</a>
+## `bitfield( )` <a name="bitfield(_)" title="Permalink to '`bitfield( )`'">&sect;</a>
 
 Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has is set to one and the rest are set to zero.
 
-## `wanted( )` <a id="wanted(_)" title="Permalink to '`wanted( )`'">&sect;</a>
+## `wanted( )` <a name="wanted(_)" title="Permalink to '`wanted( )`'">&sect;</a>
 
 Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has or simply does not want is set to zero and the rest
@@ -174,7 +174,7 @@ Currently, this is just `~ $client->bitfield( )` but if your subclass has
 file based priorities, you could only 'want' the pieces which lie inside of
 the files you want.
 
-## `files( )` <a id="files(_)" title="Permalink to '`files( )`'">&sect;</a>
+## `files( )` <a name="files(_)" title="Permalink to '`files( )`'">&sect;</a>
 
 Returns a list of hash references with the following keys:
 
@@ -186,19 +186,19 @@ Which is the size of file in bytes.
 
 Which is the absolute path of the file.
 
-## `peers( )` <a id="peers(_)" title="Permalink to '`peers( )`'">&sect;</a>
+## `peers( )` <a name="peers(_)" title="Permalink to '`peers( )`'">&sect;</a>
 
 Returns the list of currently connected peers. The organization of these peers
 is not yet final so... don't write anything you don't expect to break before
 we hit `v1.0.0`.
 
-## `state( )` <a id="state(_)" title="Permalink to '`state( )`'">&sect;</a>
+## `state( )` <a name="state(_)" title="Permalink to '`state( )`'">&sect;</a>
 
 Returns `active` if the client is [started](#start(_)), `paused` if client
 is [paused](#pause(_)), and `stopped` if the client is currently
 [stopped](#stop(_)).
 
-# This Module is Lame! <a id="This_Module_is_Lame!" title="Permalink to 'This Module is Lame!'">&sect;</a>
+# This Module is Lame! <a name="This_Module_is_Lame!" title="Permalink to 'This Module is Lame!'">&sect;</a>
 
 Yeah, I said it.
 
@@ -208,13 +208,13 @@ order to interact with other clients in a modern day swarm.
 minimum but it's based on [Moose](http://search.cpan.org/perldoc?Moose) or [Mouse](http://search.cpan.org/perldoc?Mouse) so you could always
 subclass it to add more advanced functionality. Hint, hint!
 
-## What is currently supported? <a id="What_is_currently_supported?" title="Permalink to 'What is currently supported?'">&sect;</a>
+## What is currently supported? <a name="What_is_currently_supported?" title="Permalink to 'What is currently supported?'">&sect;</a>
 
 Basic stuff. We can make and handle piece requests. Deal with cancels,
 disconnect idle peers, unchoke folks. Normal... stuff. HTTP trackers are
 supported but do not perform according to spec yet.
 
-## What will probably be supported in the future? <a id="What_will_probably_be_supported_in_the_future?" title="Permalink to 'What will probably be supported in the future?'">&sect;</a>
+## What will probably be supported in the future? <a name="What_will_probably_be_supported_in_the_future?" title="Permalink to 'What will probably be supported in the future?'">&sect;</a>
 
 DHT (which will likely be in a separate dist), fast extensions, multi-tracker
 extensions, IPv6 stuff, file download priorities... I'll get around to those.
@@ -223,12 +223,12 @@ Long term, UDP trackers may be supported.
 
 For a detailed list, see the ToDo file included with this distribution.
 
-## What will likely never be supported? <a id="What_will_likely_never_be_supported?" title="Permalink to 'What will likely never be supported?'">&sect;</a>
+## What will likely never be supported? <a name="What_will_likely_never_be_supported?" title="Permalink to 'What will likely never be supported?'">&sect;</a>
 
 We can't have nice things. Protocol encryption, uTP, endgame tricks, ...these
 will probably never be included in [AnyEvent::BitTorrent](http://search.cpan.org/perldoc?AnyEvent::BitTorrent).
 
-## What should I use instead? <a id="What_should_I_use_instead?" title="Permalink to 'What should I use instead?'">&sect;</a>
+## What should I use instead? <a name="What_should_I_use_instead?" title="Permalink to 'What should I use instead?'">&sect;</a>
 
 If you're reading all of this with a scowl, there are many alternatives to
 this module, most of which are sure to be better suited for advanced users. I
@@ -243,7 +243,7 @@ being worked on and will be based on [Reflex](http://search.cpan.org/perldoc?Ref
 If you're working on a Perl based client and would like me to link to it, send
 a bug report to the tracker [listed below](#Bug_Reports).
 
-# Subclassing AnyEvent::BitTorrent <a id="Subclassing_AnyEvent::BitTorrent" title="Permalink to 'Subclassing AnyEvent::BitTorrent'">&sect;</a>
+# Subclassing AnyEvent::BitTorrent <a name="Subclassing_AnyEvent::BitTorrent" title="Permalink to 'Subclassing AnyEvent::BitTorrent'">&sect;</a>
 
 TODO
 
@@ -252,7 +252,7 @@ any way proves harmful to individual peers or the swarm at large, rather than
 damage [AnyEvent::BitTorrent](http://search.cpan.org/perldoc?AnyEvent::BitTorrent)'s reputation, override the peerid attribute.
 Thanks.
 
-# PeerID Specification <a id="PeerID_Specification" title="Permalink to 'PeerID Specification'">&sect;</a>
+# PeerID Specification <a name="PeerID_Specification" title="Permalink to 'PeerID Specification'">&sect;</a>
 
 [AnyEvent::BitTorrent](http://search.cpan.org/perldoc?AnyEvent::BitTorrent) may be identified in a swarm by its peer id. As of
 this version, our peer id looks sorta like:
@@ -262,7 +262,7 @@ this version, our peer id looks sorta like:
 Where `0110` are the Major (`01`) and minor (`10`) version numbers and the
 `X`s are random filler.
 
-# Bug Reports <a id="Bug_Reports" title="Permalink to 'Bug Reports'">&sect;</a>
+# Bug Reports <a name="Bug_Reports" title="Permalink to 'Bug Reports'">&sect;</a>
 
 If email is better for you, [my address is mentioned below](#Author) but I
 would rather have bugs sent through the issue tracker found at
@@ -271,18 +271,18 @@ http://github.com/sanko/anyevent-bittorrent/issues.
 Please check the ToDo file included with this distribution in case your bug
 is already known (...I probably won't file bug reports to myself).
 
-# See Also <a id="See_Also" title="Permalink to 'See Also'">&sect;</a>
+# See Also <a name="See_Also" title="Permalink to 'See Also'">&sect;</a>
 
 [Net::BitTorrent::Protocol](http://search.cpan.org/perldoc?Net::BitTorrent::Protocol) - The package which does all of the wire protocol
 level heavy lifting.
 
-# Author <a id="Author" title="Permalink to 'Author'">&sect;</a>
+# Author <a name="Author" title="Permalink to 'Author'">&sect;</a>
 
 Sanko Robinson <sanko@cpan.org> - http://sankorobinson.com/
 
 CPAN ID: SANKO
 
-# License and Legal <a id="License_and_Legal" title="Permalink to 'License and Legal'">&sect;</a>
+# License and Legal <a name="License_and_Legal" title="Permalink to 'License and Legal'">&sect;</a>
 
 Copyright (C) 2011-2012 by Sanko Robinson <sanko@cpan.org>
 
