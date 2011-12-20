@@ -697,6 +697,10 @@ sub _on_read {
                     $s->hashcheck($index);    # XXX - Verify write
                     $s->_broadcast(build_have($index))
                         ;    # XXX - only broadcast to non-seeds
+                    $s->announce('complete')
+                        if !scalar grep {$_} split '',
+                        substr unpack('b*', ~$s->bitfield), 0,
+                        $s->piece_count + 1;
                     $s->_consider_peer($_)
                         for grep { $_->{local_interested} }
                         values %{$s->peers};
