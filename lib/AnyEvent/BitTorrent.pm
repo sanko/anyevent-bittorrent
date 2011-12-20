@@ -987,8 +987,8 @@ need it more than occasionally, it may be best to cache it yourself.
 
 =item C<name( )>
 
-Returns the UTF-8 encoded string the metadata suggested name to save the file
-(or directory, in the case of multi-file torrents) under.
+Returns the UTF-8 encoded string the metadata suggests we save the file (or
+directory, in the case of multi-file torrents) under.
 
 =item C<uploaded( )>
 
@@ -1001,8 +1001,7 @@ Returns the total amount downloaded from other peers.
 =item C<left( )>
 
 Returns the approximate amount based on the pieces we still
-L<want|/"wanted( )"> multiplied by the L<size of pieces|/"piece_length( )"> we
-still plan on downloading.
+L<want|/"wanted( )"> multiplied by the L<size of pieces|/"piece_length( )">.
 
 =item C<piece_length( )>
 

@@ -85,8 +85,8 @@ Methods
         cache it yourself.
 
     `name( )'
-        Returns the UTF-8 encoded string the metadata suggested name to save
-        the file (or directory, in the case of multi-file torrents) under.
+        Returns the UTF-8 encoded string the metadata suggests we save the
+        file (or directory, in the case of multi-file torrents) under.
 
     `uploaded( )'
         Returns the total amount uploaded to remote peers.
@@ -96,7 +96,7 @@ Methods
 
     `left( )'
         Returns the approximate amount based on the pieces we still want
-        multiplied by the size of pieces we still plan on downloading.
+        multiplied by the size of pieces.
 
     `piece_length( )'
         Returns the number of bytes in each piece the file or files are
