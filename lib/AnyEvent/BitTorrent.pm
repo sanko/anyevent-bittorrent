@@ -444,6 +444,7 @@ has _choke_timer => (
         AE::timer(
             10, 40,
             sub {
+                return if $s->state ne 'active';
                 my @interested
                     = grep { $_->{remote_interested} && $_->{remote_choked} }
                     values %{$s->peers};
@@ -469,6 +470,7 @@ has _fill_requests_timer => (
         AE::timer(
             15, 1,
             sub {    # XXX - Limit by time/bandwidth
+                return if $s->state ne 'active';
                 my @waiting = grep { scalar @{$_->{remote_requests}} }
                     values %{$s->peers};
                 return if !@waiting;
@@ -745,6 +747,7 @@ sub _broadcast {
 
 sub _consider_peer {    # Figure out whether or not we find a peer interesting
     my ($s, $p) = @_;
+    return if $s->state ne 'active';
     my $relevence = unpack('b*', $p->{bitfield}) & unpack('b*', $s->wanted);
     my $interesting = (index(unpack('b*', $relevence), 1, 0) != -1) ? 1 : 0;
     if ($interesting) {
@@ -769,6 +772,7 @@ has working_pieces => (is       => 'ro',
 
 sub _request_pieces {
     my ($s, $p) = @_;
+    return if $s->state ne 'active';
     use Scalar::Util qw[weaken];
     weaken $p;
     $p // return;
@@ -862,6 +866,49 @@ has on_hash_fail => (
     clearer => '_no_hash_fail'
 );
 sub _trigger_hash_fail { shift->on_hash_fail()->(@_) }
+
+#
+has state => (is      => 'ro',
+              isa     => enum([qw[active stopped paused]]),
+              writer  => '_set_state',
+              default => 'active'
+);
+
+sub stop {
+    my $s = shift;
+    return if $s->state eq 'stopped';
+    $s->announce('stopped');
+    $s->_clear_peers;
+    $s->_clear_peer_timer;
+    $s->_clear_tracker_timer;
+    $s->_set_state('stopped');
+}
+
+sub start {
+    my $s = shift;
+    $s->announce('started');
+    $s->peers;
+    $s->_peer_timer;
+    $s->_tracker_timer;
+    $s->_set_state('active');
+}
+
+sub pause {
+    my $s = shift;
+    $s->peers;
+    $s->_peer_timer;
+    $s->_tracker_timer;
+    $s->_set_state('paused');
+}
+
+#
+sub BUILD {
+    my ($s, $a) = @_;
+    $s->start  if $s->state eq 'active';
+    $s->paused if $s->state eq 'paused';
+
+    # Stopped is the default
+}
 
 #
 __PACKAGE__->meta->make_immutable();
