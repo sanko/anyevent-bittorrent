@@ -981,6 +981,31 @@ L<hashcheck|/"hashcheck( [...] )">. The callback is handed the piece's index.
 This is a subroutine called whenever a piece passes its
 L<hashcheck|/"hashcheck( [...] )">. The callback is handed the piece's index.
 
+=item C<state>
+
+This must be one of the following:
+
+=over
+
+=item C<started>
+
+This is the default. The client will attempt to create new connections, make
+and fill requests, etc. This is normal client behavior.
+
+=item C<paused>
+
+In this state, connections will be made and accepted but no piece requests
+will be made or filled. To resume full, normal behavior, you must call
+C<L<start( )|/"start( )">>.
+
+=item C<stopped>
+
+Everything is put on hold. No new outgoing connections are attempted and
+incoming connections are rejected. To resume full, normal behavior, you must
+call C<L<start( )|/"start( )">>.
+
+=back
+
 =back
 
 =item C<hashcheck( [...] )>
@@ -1006,6 +1031,22 @@ single file, for example).
 
 As pieces pass or fail, your C<on_hash_pass> and C<on_hash_fail> callbacks are
 triggered.
+
+=item C<start( )>
+
+Sends a 'started' event to trackers and starts performing as a client is
+expected. New connections are made and accepted, requests are made and filled,
+etc.
+
+=item C<stop( )>
+
+Sends a stopped event to trackers, closes all connections, stops attempting
+new outgoing connections, rejects incoming connections.
+
+=item C<pause( )>
+
+The client remains mostly active; new connections will be made and accepted,
+etc. but no requests will be made or filled while the client is paused.
 
 =back
 
@@ -1096,6 +1137,12 @@ Which is the absolute path of the file.
 Returns the list of currently connected peers. The organization of these peers
 is not yet final so... don't write anything you don't expect to break before
 we hit C<v1.0.0>.
+
+=item C<state( )>
+
+Returns C<active> if the client is L<started|/"start( )">, C<paused> if client
+is L<paused|/"pause( )">, and C<stopped> if the client is currently
+L<stopped|/"stop( )">.
 
 =back
 
