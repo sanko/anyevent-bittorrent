@@ -1,4 +1,14 @@
-Version 0.1.1 | Early afternoon on December 19th, 2011 | XXXXXXXXXX
+Version 0.1.2 | Next Sunday AD | xxxxxxxxxx
+
+    API Changes/Compatibility Information:
+     * New start( ), stop( ), pause( ), and state( ) methods
+     * New state parameter to new( )
+
+    Resolved Issues/Bug Fixes:
+     * Correct stopped and complete events are sent to tracker when required
+     * Fixed compat on perl 5.010
+
+Version 0.1.1 | Early afternoon on December 19th, 2011 | 4de209b886
 
     API Changes/Compatibility Information:
      * It exists!
