@@ -581,8 +581,8 @@ sub _on_read_incoming {
         $h->on_read(sub { $s->_on_read(@_) });
     }
     else {
-        ...;
 
+        #...;
         # Assume encrypted
     }
     1;
