@@ -971,9 +971,11 @@ the section entitled "L<This Module is Lame!|/"This Module is Lame!">"
 
 The API, much like the module itself, is simple.
 
-=over
+Anything you find by skimming the source is likely not ready for public use
+and will be subject to change before C<v1.0.0>. Here's the public interface as
+of this version:
 
-=item C<new( ... )>
+=head2 C<new( ... )>
 
 This constructor understands the following arguments:
 
@@ -1036,7 +1038,7 @@ call L<C<start( )>|/"start( )">.
 
 =back
 
-=item C<hashcheck( [...] )>
+=head2 C<hashcheck( [...] )>
 
 This method expects...
 
@@ -1060,45 +1062,38 @@ single file, for example).
 As pieces pass or fail, your C<on_hash_pass> and C<on_hash_fail> callbacks are
 triggered.
 
-=item C<start( )>
+=head2 C<start( )>
 
 Sends a 'started' event to trackers and starts performing as a client is
 expected. New connections are made and accepted, requests are made and filled,
 etc.
 
-=item C<stop( )>
+=head2 C<stop( )>
 
 Sends a stopped event to trackers, closes all connections, stops attempting
 new outgoing connections, rejects incoming connections and closes all open
 files.
 
-=item C<pause( )>
+=head2 C<pause( )>
 
 The client remains mostly active; new connections will be made and accepted,
 etc. but no requests will be made or filled while the client is paused.
 
-=back
-
-In addition to these, there are several informational methods which do not
-trigger or modify any activity:
-
-=over
-
-=item C<infohash( )>
+=head2 C<infohash( )>
 
 Returns the 20-byte SHA1 hash of the value of the info key from the metadata
 file.
 
-=item C<peerid( )>
+=head2 C<peerid( )>
 
 Returns the 20 byte string used to identify the client. Please see the
-L<spec|/"Peer ID Specification"> below.
+L<spec|/"PeerID Specification"> below.
 
-=item C<port( )>
+=head2 C<port( )>
 
 Returns the port number the client is listening on.
 
-=item C<size( )>
+=head2 C<size( )>
 
 Returns the total size of all L<files|/"files( )"> described in the torrent's
 metadata.
@@ -1106,36 +1101,36 @@ metadata.
 Note that this value is recalculated every time you call this method. If you
 need it more than occasionally, it may be best to cache it yourself.
 
-=item C<name( )>
+=head2 C<name( )>
 
 Returns the UTF-8 encoded string the metadata suggests we save the file (or
 directory, in the case of multi-file torrents) under.
 
-=item C<uploaded( )>
+=head2 C<uploaded( )>
 
 Returns the total amount uploaded to remote peers.
 
-=item C<downloaded( )>
+=head2 C<downloaded( )>
 
 Returns the total amount downloaded from other peers.
 
-=item C<left( )>
+=head2 C<left( )>
 
 Returns the approximate amount based on the pieces we still
 L<want|/"wanted( )"> multiplied by the L<size of pieces|/"piece_length( )">.
 
-=item C<piece_length( )>
+=head2 C<piece_length( )>
 
 Returns the number of bytes in each piece the file or files are split into.
 For the purposes of transfer, files are split into fixed-size pieces which are
 all the same length except for possibly the last one which may be truncated.
 
-=item C<bitfield( )>
+=head2 C<bitfield( )>
 
 Returns a packed binary string in ascending order (ready for C<vec()>). Each
 index that the client has is set to one and the rest are set to zero.
 
-=item C<wanted( )>
+=head2 C<wanted( )>
 
 Returns a packed binary string in ascending order (ready for C<vec()>). Each
 index that the client has or simply does not want is set to zero and the rest
@@ -1145,7 +1140,7 @@ Currently, this is just C<< ~ $client->bitfield( ) >> but if your subclass has
 file based priorities, you could only 'want' the pieces which lie inside of
 the files you want.
 
-=item C<files( )>
+=head2 C<files( )>
 
 Returns a list of hash references with the following keys:
 
@@ -1161,22 +1156,17 @@ Which is the absolute path of the file.
 
 =back
 
-=item C<peers( )>
+=head2 C<peers( )>
 
 Returns the list of currently connected peers. The organization of these peers
 is not yet final so... don't write anything you don't expect to break before
 we hit C<v1.0.0>.
 
-=item C<state( )>
+=head2 C<state( )>
 
 Returns C<active> if the client is L<started|/"start( )">, C<paused> if client
 is L<paused|/"pause( )">, and C<stopped> if the client is currently
 L<stopped|/"stop( )">.
-
-=back
-
-Anything you find by skimming the source is likely not ready for public use
-and will be subject to change before C<v1.0.0>.
 
 =head1 This Module is Lame!
 

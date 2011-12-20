@@ -16,161 +16,157 @@ Description
 Methods
     The API, much like the module itself, is simple.
 
-    `new( ... )'
-        This constructor understands the following arguments:
-
-        `path'
-            This is the only required parameter. It's the path to a valid
-            .torrent file.
-
-        `basedir'
-            This is the base directory all data will be stored in and/or
-            read from. Multifile torrents will create another directory
-            below this to store all files.
-
-            By default, this is the current working directory when `new( ...
-            )' is called.
-
-        `port'
-            This is the preferred port local host binds and expects incoming
-            peers to connect to.
-
-            By default, this is a zero; the system will pick a port number
-            randomly.
-
-        `on_hash_fail'
-            This is a subroutine called whenever a piece fails to pass
-            hashcheck. The callback is handed the piece's index.
-
-        `on_hash_pass'
-            This is a subroutine called whenever a piece passes its
-            hashcheck. The callback is handed the piece's index.
-
-        `state'
-            This must be one of the following:
-
-            `started'
-                This is the default. The client will attempt to create new
-                connections, make and fill requests, etc. This is normal
-                client behavior.
-
-            `paused'
-                In this state, connections will be made and accepted but no
-                piece requests will be made or filled. To resume full,
-                normal behavior, you must call `start( )'.
-
-            `stopped'
-                Everything is put on hold. No new outgoing connections are
-                attempted and incoming connections are rejected. To resume
-                full, normal behavior, you must call `start( )'.
-
-    `hashcheck( [...] )'
-        This method expects...
-
-        ...a list of integers. You could use this to check a range of pieces
-        (a single file, for example).
-                $client->hashcheck( 1 .. 5, 34 .. 56 );
-
-        ...a single integer. Only that specific piece is checked.
-                $client->hashcheck( 17 );
-
-        ...nothing. All data related to this torrent will be checked.
-                $client->hashcheck( );
-
-        As pieces pass or fail, your `on_hash_pass' and `on_hash_fail'
-        callbacks are triggered.
-
-    `start( )'
-        Sends a 'started' event to trackers and starts performing as a
-        client is expected. New connections are made and accepted, requests
-        are made and filled, etc.
-
-    `stop( )'
-        Sends a stopped event to trackers, closes all connections, stops
-        attempting new outgoing connections, rejects incoming connections
-        and closes all open files.
-
-    `pause( )'
-        The client remains mostly active; new connections will be made and
-        accepted, etc. but no requests will be made or filled while the
-        client is paused.
-
-    In addition to these, there are several informational methods which do
-    not trigger or modify any activity:
-
-    `infohash( )'
-        Returns the 20-byte SHA1 hash of the value of the info key from the
-        metadata file.
-
-    `peerid( )'
-        Returns the 20 byte string used to identify the client. Please see
-        the spec below.
-
-    `port( )'
-        Returns the port number the client is listening on.
-
-    `size( )'
-        Returns the total size of all files described in the torrent's
-        metadata.
-
-        Note that this value is recalculated every time you call this
-        method. If you need it more than occasionally, it may be best to
-        cache it yourself.
-
-    `name( )'
-        Returns the UTF-8 encoded string the metadata suggests we save the
-        file (or directory, in the case of multi-file torrents) under.
-
-    `uploaded( )'
-        Returns the total amount uploaded to remote peers.
-
-    `downloaded( )'
-        Returns the total amount downloaded from other peers.
-
-    `left( )'
-        Returns the approximate amount based on the pieces we still want
-        multiplied by the size of pieces.
-
-    `piece_length( )'
-        Returns the number of bytes in each piece the file or files are
-        split into. For the purposes of transfer, files are split into
-        fixed-size pieces which are all the same length except for possibly
-        the last one which may be truncated.
-
-    `bitfield( )'
-        Returns a packed binary string in ascending order (ready for
-        `vec()'). Each index that the client has is set to one and the rest
-        are set to zero.
-
-    `wanted( )'
-        Returns a packed binary string in ascending order (ready for
-        `vec()'). Each index that the client has or simply does not want is
-        set to zero and the rest are set to one.
-
-        Currently, this is just `~ $client->bitfield( )' but if your
-        subclass has file based priorities, you could only 'want' the pieces
-        which lie inside of the files you want.
-
-    `files( )'
-        Returns a list of hash references with the following keys:
-
-        `length'
-            Which is the size of file in bytes.
-
-        `path'
-            Which is the absolute path of the file.
-
-    `peers( )'
-        Returns the list of currently connected peers. The organization of
-        these peers is not yet final so... don't write anything you don't
-        expect to break before we hit `v1.0.0'.
-
-    `state( )'
-        Returns `active' if the client is started, `paused' if client is
-        paused, and `stopped' if the client is currently stopped.
-
     Anything you find by skimming the source is likely not ready for public
-    use and will be subject to change before `v1.0.0'.
+    use and will be subject to change before `v1.0.0'. Here's the public
+    interface as of this version:
+
+  `new( ... )'
+    This constructor understands the following arguments:
+
+    `path'
+        This is the only required parameter. It's the path to a valid
+        .torrent file.
+
+    `basedir'
+        This is the base directory all data will be stored in and/or read
+        from. Multifile torrents will create another directory below this to
+        store all files.
+
+        By default, this is the current working directory when `new( ... )'
+        is called.
+
+    `port'
+        This is the preferred port local host binds and expects incoming
+        peers to connect to.
+
+        By default, this is a zero; the system will pick a port number
+        randomly.
+
+    `on_hash_fail'
+        This is a subroutine called whenever a piece fails to pass
+        hashcheck. The callback is handed the piece's index.
+
+    `on_hash_pass'
+        This is a subroutine called whenever a piece passes its hashcheck.
+        The callback is handed the piece's index.
+
+    `state'
+        This must be one of the following:
+
+        `started'
+            This is the default. The client will attempt to create new
+            connections, make and fill requests, etc. This is normal client
+            behavior.
+
+        `paused'
+            In this state, connections will be made and accepted but no
+            piece requests will be made or filled. To resume full, normal
+            behavior, you must call `start( )'.
+
+        `stopped'
+            Everything is put on hold. No new outgoing connections are
+            attempted and incoming connections are rejected. To resume full,
+            normal behavior, you must call `start( )'.
+
+  `hashcheck( [...] )'
+    This method expects...
+
+    ...a list of integers. You could use this to check a range of pieces (a
+    single file, for example).
+            $client->hashcheck( 1 .. 5, 34 .. 56 );
+
+    ...a single integer. Only that specific piece is checked.
+            $client->hashcheck( 17 );
+
+    ...nothing. All data related to this torrent will be checked.
+            $client->hashcheck( );
+
+    As pieces pass or fail, your `on_hash_pass' and `on_hash_fail' callbacks
+    are triggered.
+
+  `start( )'
+    Sends a 'started' event to trackers and starts performing as a client is
+    expected. New connections are made and accepted, requests are made and
+    filled, etc.
+
+  `stop( )'
+    Sends a stopped event to trackers, closes all connections, stops
+    attempting new outgoing connections, rejects incoming connections and
+    closes all open files.
+
+  `pause( )'
+    The client remains mostly active; new connections will be made and
+    accepted, etc. but no requests will be made or filled while the client
+    is paused.
+
+  `infohash( )'
+    Returns the 20-byte SHA1 hash of the value of the info key from the
+    metadata file.
+
+  `peerid( )'
+    Returns the 20 byte string used to identify the client. Please see the
+    spec below.
+
+  `port( )'
+    Returns the port number the client is listening on.
+
+  `size( )'
+    Returns the total size of all files described in the torrent's metadata.
+
+    Note that this value is recalculated every time you call this method. If
+    you need it more than occasionally, it may be best to cache it yourself.
+
+  `name( )'
+    Returns the UTF-8 encoded string the metadata suggests we save the file
+    (or directory, in the case of multi-file torrents) under.
+
+  `uploaded( )'
+    Returns the total amount uploaded to remote peers.
+
+  `downloaded( )'
+    Returns the total amount downloaded from other peers.
+
+  `left( )'
+    Returns the approximate amount based on the pieces we still want
+    multiplied by the size of pieces.
+
+  `piece_length( )'
+    Returns the number of bytes in each piece the file or files are split
+    into. For the purposes of transfer, files are split into fixed-size
+    pieces which are all the same length except for possibly the last one
+    which may be truncated.
+
+  `bitfield( )'
+    Returns a packed binary string in ascending order (ready for `vec()').
+    Each index that the client has is set to one and the rest are set to
+    zero.
+
+  `wanted( )'
+    Returns a packed binary string in ascending order (ready for `vec()').
+    Each index that the client has or simply does not want is set to zero
+    and the rest are set to one.
+
+    Currently, this is just `~ $client->bitfield( )' but if your subclass
+    has file based priorities, you could only 'want' the pieces which lie
+    inside of the files you want.
+
+  `files( )'
+    Returns a list of hash references with the following keys:
+
+    `length'
+        Which is the size of file in bytes.
+
+    `path'
+        Which is the absolute path of the file.
+
+  `peers( )'
+    Returns the list of currently connected peers. The organization of these
+    peers is not yet final so... don't write anything you don't expect to
+    break before we hit `v1.0.0'.
+
+  `state( )'
+    Returns `active' if the client is started, `paused' if client is paused,
+    and `stopped' if the client is currently stopped.
 
 This Module is Lame!
     Yeah, I said it.
