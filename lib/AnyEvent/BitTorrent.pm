@@ -44,7 +44,7 @@ sub _build_socket {
     tcp_server undef, $s->port, sub {
         my ($fh, $host, $port) = @_;
         return $fh->destroy if $s->state eq 'stopped';
-         my $handle = AnyEvent::Handle->new(
+        my $handle = AnyEvent::Handle->new(
             fh       => $fh,
             on_error => sub {
                 my ($hdl, $fatal, $msg) = @_;
@@ -177,15 +177,20 @@ sub _build_files {
     defined $s->metadata->{info}{files} ?
         [
         map {
-            {
-                length   => $_->{length},
-                    path => File::Spec->rel2abs(
-                    File::Spec->catfile($s->basedir, $s->name, @{$_->{path}}))
+            {fh     => undef,
+             mode   => 'c',
+             length => $_->{length},
+             path =>
+                 File::Spec->rel2abs(
+                     File::Spec->catfile($s->basedir, $s->name, @{$_->{path}})
+                 )
             }
             } @{$s->metadata->{info}{files}}
         ]
         : [
-          {length => $s->metadata->{info}{length},
+          {fh     => undef,
+           mode   => 'c',
+           length => $s->metadata->{info}{length},
            path =>
                File::Spec->rel2abs(File::Spec->catfile($s->basedir, $s->name))
           }
@@ -197,6 +202,40 @@ sub size {
     my $ret = 0;
     $ret += $_->{length} for @{$s->files};
     $ret;
+}
+
+sub _open {
+    my ($s, $i, $m) = @_;
+    return 1 if $s->files->[$i]->{mode} eq $m;
+    if (defined $s->files->[$i]->{fh}) {
+        flock $s->files->[$i]->{fh}, LOCK_UN;
+        close $s->files->[$i]->{fh};
+        $s->files->[$i]->{fh} = ();
+    }
+    if ($m eq 'r') {
+        sysopen($s->files->[$i]->{fh}, $s->files->[$i]->{path}, O_RDONLY)
+            || return;
+
+        # flock($s->files->[$i]->{fh}, LOCK_SH) || return;
+    }
+    elsif ($m eq 'w') {
+        my @split = File::Spec->splitdir($s->files->[$i]->{path});
+        pop @split;    # File name itself
+        my $dir = File::Spec->catdir(@split);
+        File::Path::mkpath($dir) if !-d $dir;
+        sysopen($s->files->[$i]->{fh},
+                $s->files->[$i]->{path},
+                O_WRONLY | O_CREAT)
+            || return;
+
+        # flock $s->files->[$i]->{fh}, LOCK_EX;
+        truncate $s->files->[$i]->{fh}, $s->files->[$i]->{length}
+            if -s $s->files->[$i]->{fh}
+                != $s->files->[$i]->{length};    # XXX - pre-allocate files
+    }
+    elsif ($m eq 'c') { }
+    else              {return}
+    return $s->files->[$i]->{mode} = $m;
 }
 
 sub _read {
@@ -220,18 +259,13 @@ READ: while ((defined $length) && ($length > 0)) {
             : $length;
 
         # XXX - Keep file open for a while
-        if ((!-f $s->files->[$file_index]->{path})
-            || (!sysopen(my ($fh), $s->files->[$file_index]->{path}, O_RDONLY)
-            )
-            )
+        if (   (!-f $s->files->[$file_index]->{path})
+            || (!$s->_open($file_index, 'r')))
         {   $data .= "\0" x $this_read;
         }
         else {
-            flock $fh, LOCK_SH;
-            sysseek $fh, $total_offset, SEEK_SET;
-            sysread $fh, my ($_data), $this_read;
-            flock $fh, LOCK_UN;
-            close $fh;
+            sysseek $s->files->[$file_index]->{fh}, $total_offset, SEEK_SET;
+            sysread $s->files->[$file_index]->{fh}, my ($_data), $this_read;
             $data .= $_data if $_data;
         }
         $file_index++;
@@ -260,22 +294,10 @@ WRITE: while ((defined $data) && (length $data > 0)) {
             ?
             ($s->files->[$file_index]->{length} - $total_offset)
             : length $data;
-        my @split = File::Spec->splitdir($s->files->[$file_index]->{path});
-        pop @split;    # File name itself
-        my $dir = File::Spec->catdir(@split);
-        File::Path::mkpath($dir) if !-d $dir;
-        sysopen(my ($fh),                           # XXX - Keep the file open
-                $s->files->[$file_index]->{path},
-                O_WRONLY | O_CREAT
-        ) or return;
-        flock $fh, LOCK_EX;
-        truncate $fh, $s->files->[$file_index]->{length}
-            if -s $fh != $s->files->[$file_index]
-                ->{length};                     # XXX - pre-allocate files
-        sysseek $fh, $total_offset, SEEK_SET;
-        my $w = syswrite $fh, substr $data, 0, $this_write, '';
-        flock $fh, LOCK_UN;
-        close $fh;
+        $s->_open($file_index, 'w') || die $!;
+        sysseek $s->files->[$file_index]->{fh}, $total_offset, SEEK_SET;
+        my $w = syswrite $s->files->[$file_index]->{fh}, substr $data, 0,
+            $this_write, '';
         $file_index++;
         last WRITE if not defined $s->files->[$file_index];
         $total_offset = 0;
@@ -885,6 +907,7 @@ sub stop {
     $s->_clear_peers;
     $s->_clear_peer_timer;
     $s->_clear_tracker_timer;
+    $s->_open($_, 'c') for 0 .. $#{$s->files};
     $s->_set_state('stopped');
 }
 
@@ -912,6 +935,11 @@ sub BUILD {
     $s->paused if $s->state eq 'paused';
 
     # Stopped is the default
+}
+
+sub DEMOLISH {
+    my $s = shift;
+    $s->_open($_, 'c') for 0 .. $#{$s->files};
 }
 
 #
@@ -1041,7 +1069,8 @@ etc.
 =item C<stop( )>
 
 Sends a stopped event to trackers, closes all connections, stops attempting
-new outgoing connections, rejects incoming connections.
+new outgoing connections, rejects incoming connections and closes all open
+files.
 
 =item C<pause( )>
 
