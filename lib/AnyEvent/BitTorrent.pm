@@ -17,19 +17,10 @@ use Net::BitTorrent::Protocol qw[:all];
 my $block_size = 2**14;
 
 #
-has port => (
-    is      => 'ro',
-    isa     => 'Int',
-    default => 0,
-    writer  => '_set_port',
-
-    #trigger => sub {
-    #    my ($s, $p) = @_;
-    #    return if !$s->_has_socket;
-    #    use Data::Dump;
-    #    ddx \@_;
-    #    die;
-    #}
+has port => (is      => 'ro',
+             isa     => 'Int',
+             default => 0,
+             writer  => '_set_port'
 );
 has socket => (is        => 'ro',
                isa       => 'Ref',
@@ -215,8 +206,7 @@ sub _open {
     if ($m eq 'r') {
         sysopen($s->files->[$i]->{fh}, $s->files->[$i]->{path}, O_RDONLY)
             || return;
-
-        # flock($s->files->[$i]->{fh}, LOCK_SH) || return;
+        flock($s->files->[$i]->{fh}, LOCK_SH) || return;
     }
     elsif ($m eq 'w') {
         my @split = File::Spec->splitdir($s->files->[$i]->{path});
@@ -227,8 +217,7 @@ sub _open {
                 $s->files->[$i]->{path},
                 O_WRONLY | O_CREAT)
             || return;
-
-        # flock $s->files->[$i]->{fh}, LOCK_EX;
+        flock $s->files->[$i]->{fh}, LOCK_EX;
         truncate $s->files->[$i]->{fh}, $s->files->[$i]->{length}
             if -s $s->files->[$i]->{fh}
                 != $s->files->[$i]->{length};    # XXX - pre-allocate files
@@ -746,8 +735,12 @@ sub _on_read {
                     sort { $a <=> $b }
                     keys %{$s->working_pieces->{$index}};
                 if ((substr($s->pieces, $index * 20, 20) eq sha1($piece))) {
-                    $s->_write($index, 0, $piece);
-                    $s->hashcheck($index);    # XXX - Verify write
+                    for my $attempt (1 .. 5) {   # XXX = 5 == failure callback
+                        last
+                            if $s->_write($index, 0, $piece) == length $piece;
+                    }
+                    vec($s->{bitfield}, $index, 1) = 1;
+                    $s->_trigger_hash_pass($index);
                     $s->_broadcast(build_have($index))
                         ;    # XXX - only broadcast to non-seeds
                     $s->announce('complete')
@@ -961,13 +954,6 @@ sub BUILD {
     my ($s, $a) = @_;
     $s->start  if $s->state eq 'active';
     $s->paused if $s->state eq 'paused';
-
-    # Stopped is the default
-}
-
-sub DEMOLISH {
-    my $s = shift;
-    $s->_open($_, 'c') for 0 .. $#{$s->files};
 }
 
 #
