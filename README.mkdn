@@ -23,15 +23,15 @@ Anything you find by skimming the source is likely not ready for public use
 and will be subject to change before `v1.0.0`. Here's the public interface as
 of this version:
 
-## <a name="_new_" title="Permalink to '`new( ... )`'">`new( ... )`</a>
+## <a name="new_" title="Permalink to '`new( ... )`'">`new( ... )`</a>
 
 This constructor understands the following arguments:
 
-- `path`
+* `path`
 
 This is the only required parameter. It's the path to a valid .torrent file.
 
-- `basedir`
+* `basedir`
 
 This is the base directory all data will be stored in and/or read from.
 Multifile torrents will create another directory below this to store all
@@ -40,94 +40,93 @@ files.
 By default, this is the current working directory when
 [`new( ... )`](#new_) is called.
 
-- `port`
+* `port`
 
 This is the preferred port local host binds and expects incoming peers to
 connect to.
 
 By default, this is a zero; the system will pick a port number randomly.
 
-- `on_hash_fail`
+* `on_hash_fail`
 
 This is a subroutine called whenever a piece fails to pass
 [hashcheck](#hashcheck_). The callback is handed the piece's index.
 
-- `on_hash_pass`
+* `on_hash_pass`
 
 This is a subroutine called whenever a piece passes its
 [hashcheck](#hashcheck_). The callback is handed the piece's index.
 
-- `state`
-
+* `state`
 This must be one of the following:
 
-- `started`
+ + `started`
 
-This is the default. The client will attempt to create new connections, make
-and fill requests, etc. This is normal client behavior.
+    This is the default. The client will attempt to create new connections, make
+    and fill requests, etc. This is normal client behavior.
 
-- `paused`
+ + `paused`
 
-In this state, connections will be made and accepted but no piece requests
-will be made or filled. To resume full, normal behavior, you must call
-[`start( )`](#start_).
+    In this state, connections will be made and accepted but no piece requests
+    will be made or filled. To resume full, normal behavior, you must call
+    [`start( )`](#start_).
 
-- `stopped`
+ + `stopped`
 
-Everything is put on hold. No new outgoing connections are attempted and
-incoming connections are rejected. To resume full, normal behavior, you must
-call [`start( )`](#start_).
+    Everything is put on hold. No new outgoing connections are attempted and
+    incoming connections are rejected. To resume full, normal behavior, you must
+    call [`start( )`](#start_).
 
-## <a name="_hashcheck_" title="Permalink to '`hashcheck( [...] )`'">`hashcheck( [...] )`</a>
+## <a name="hashcheck_" title="Permalink to '`hashcheck( [...] )`'">`hashcheck( [...] )`</a>
 
 This method expects...
 
-- ...a list of integers. You could use this to check a range of pieces (a
+* ...a list of integers. You could use this to check a range of pieces (a
 single file, for example).
 
     $client->hashcheck( 1 .. 5, 34 .. 56 );
-- ...a single integer. Only that specific piece is checked.
+* ...a single integer. Only that specific piece is checked.
 
     $client->hashcheck( 17 );
-- ...nothing. All data related to this torrent will be checked.
+* ...nothing. All data related to this torrent will be checked.
 
     $client->hashcheck( );
 
 As pieces pass or fail, your `on_hash_pass` and `on_hash_fail` callbacks are
 triggered.
 
-## <a name="_start_" title="Permalink to '`start( )`'">`start( )`</a>
+## <a name="start_" title="Permalink to '`start( )`'">`start( )`</a>
 
 Sends a 'started' event to trackers and starts performing as a client is
 expected. New connections are made and accepted, requests are made and filled,
 etc.
 
-## <a name="_stop_" title="Permalink to '`stop( )`'">`stop( )`</a>
+## <a name="stop_" title="Permalink to '`stop( )`'">`stop( )`</a>
 
 Sends a stopped event to trackers, closes all connections, stops attempting
 new outgoing connections, rejects incoming connections and closes all open
 files.
 
-## <a name="_pause_" title="Permalink to '`pause( )`'">`pause( )`</a>
+## <a name="pause_" title="Permalink to '`pause( )`'">`pause( )`</a>
 
 The client remains mostly active; new connections will be made and accepted,
 etc. but no requests will be made or filled while the client is paused.
 
-## <a name="_infohash_" title="Permalink to '`infohash( )`'">`infohash( )`</a>
+## <a name="infohash_" title="Permalink to '`infohash( )`'">`infohash( )`</a>
 
 Returns the 20-byte SHA1 hash of the value of the info key from the metadata
 file.
 
-## <a name="_peerid_" title="Permalink to '`peerid( )`'">`peerid( )`</a>
+## <a name="peerid_" title="Permalink to '`peerid( )`'">`peerid( )`</a>
 
 Returns the 20 byte string used to identify the client. Please see the
 [spec](#PeerID_Specification) below.
 
-## <a name="_port_" title="Permalink to '`port( )`'">`port( )`</a>
+## <a name="port_" title="Permalink to '`port( )`'">`port( )`</a>
 
 Returns the port number the client is listening on.
 
-## <a name="_size_" title="Permalink to '`size( )`'">`size( )`</a>
+## <a name="size_" title="Permalink to '`size( )`'">`size( )`</a>
 
 Returns the total size of all [files](#files_) described in the torrent's
 metadata.
@@ -135,36 +134,36 @@ metadata.
 Note that this value is recalculated every time you call this method. If you
 need it more than occasionally, it may be best to cache it yourself.
 
-## <a name="_name_" title="Permalink to '`name( )`'">`name( )`</a>
+## <a name="name_" title="Permalink to '`name( )`'">`name( )`</a>
 
 Returns the UTF-8 encoded string the metadata suggests we save the file (or
 directory, in the case of multi-file torrents) under.
 
-## <a name="_uploaded_" title="Permalink to '`uploaded( )`'">`uploaded( )`</a>
+## <a name="uploaded_" title="Permalink to '`uploaded( )`'">`uploaded( )`</a>
 
 Returns the total amount uploaded to remote peers.
 
-## <a name="_downloaded_" title="Permalink to '`downloaded( )`'">`downloaded( )`</a>
+## <a name="downloaded_" title="Permalink to '`downloaded( )`'">`downloaded( )`</a>
 
 Returns the total amount downloaded from other peers.
 
-## <a name="_left_" title="Permalink to '`left( )`'">`left( )`</a>
+## <a name="left_" title="Permalink to '`left( )`'">`left( )`</a>
 
 Returns the approximate amount based on the pieces we still
 [want](#wanted_) multiplied by the [size of pieces](#piece_length_).
 
-## <a name="_piece_length_" title="Permalink to '`piece_length( )`'">`piece_length( )`</a>
+## <a name="piece_length_" title="Permalink to '`piece_length( )`'">`piece_length( )`</a>
 
 Returns the number of bytes in each piece the file or files are split into.
 For the purposes of transfer, files are split into fixed-size pieces which are
 all the same length except for possibly the last one which may be truncated.
 
-## <a name="_bitfield_" title="Permalink to '`bitfield( )`'">`bitfield( )`</a>
+## <a name="bitfield_" title="Permalink to '`bitfield( )`'">`bitfield( )`</a>
 
 Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has is set to one and the rest are set to zero.
 
-## <a name="_wanted_" title="Permalink to '`wanted( )`'">`wanted( )`</a>
+## <a name="wanted_" title="Permalink to '`wanted( )`'">`wanted( )`</a>
 
 Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has or simply does not want is set to zero and the rest
@@ -174,25 +173,25 @@ Currently, this is just `~ $client->bitfield( )` but if your subclass has
 file based priorities, you could only 'want' the pieces which lie inside of
 the files you want.
 
-## <a name="_files_" title="Permalink to '`files( )`'">`files( )`</a>
+## <a name="files_" title="Permalink to '`files( )`'">`files( )`</a>
 
 Returns a list of hash references with the following keys:
 
-- `length`
+* `length`
 
 Which is the size of file in bytes.
 
-- `path`
+* `path`
 
 Which is the absolute path of the file.
 
-## <a name="_peers_" title="Permalink to '`peers( )`'">`peers( )`</a>
+## <a name="peers_" title="Permalink to '`peers( )`'">`peers( )`</a>
 
 Returns the list of currently connected peers. The organization of these peers
 is not yet final so... don't write anything you don't expect to break before
 we hit `v1.0.0`.
 
-## <a name="_state_" title="Permalink to '`state( )`'">`state( )`</a>
+## <a name="state_" title="Permalink to '`state( )`'">`state( )`</a>
 
 Returns `active` if the client is [started](#start_), `paused` if client
 is [paused](#pause_), and `stopped` if the client is currently
@@ -234,9 +233,9 @@ If you're reading all of this with a scowl, there are many alternatives to
 this module, most of which are sure to be better suited for advanced users. I
 suggest (in no particular order):
 
-- [BitFlu](http://bitflu.workaround.ch/). It's written in Perl but you'll
+* [BitFlu](http://bitflu.workaround.ch/). It's written in Perl but you'll
 still need to be on a Linux, *BSD, et al. system to use it.
-- [Net::BitTorrent](http://search.cpan.org/perldoc?Net::BitTorrent) ...in the future. I _do not_ suggest using either
+* [Net::BitTorrent](http://search.cpan.org/perldoc?Net::BitTorrent) ...in the future. I _do not_ suggest using either
 the current stable or unstable versions found on CPAN. The next version is
 being worked on and will be based on [Reflex](http://search.cpan.org/perldoc?Reflex).
 

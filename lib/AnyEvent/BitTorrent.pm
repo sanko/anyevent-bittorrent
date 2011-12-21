@@ -381,80 +381,110 @@ sub _del_peer {
     delete $s->peers->{$h};
     $h->destroy;
 }
-has peer_cache => (is      => 'ro',
-                   isa     => 'Str',
-                   writer  => '_set_peer_cache',
-                   default => '',
-                   lazy    => 1
-);
+my $shuffle;
 has trackers => (
     is       => 'ro',
-    isa      => 'ArrayRef[ArrayRef[Str]]',
+    isa      => 'ArrayRef[HashRef]',
     lazy     => 1,
     required => 1,
     init_arg => undef,
     default  => sub {
         my $s = shift;
-        [defined $s->metadata->{'announce-list'}
-         ? @{$s->metadata->{'announce-list'}}
-         : (),
-         [defined $s->metadata->{announce} ? $s->metadata->{announce}
-          : ()
-         ]
+        $shuffle ||= sub {
+            my $deck = shift;    # $deck is a reference to an array
+            return unless @$deck;    # must not be empty!
+            my $i = @$deck;
+            while (--$i) {
+                my $j = int rand($i + 1);
+                @$deck[$i, $j] = @$deck[$j, $i];
+            }
+        };
+        my $trackers = [
+            map {
+                {urls       => $_,
+                 complete   => 0,
+                 incomplete => 0,
+                 peers      => '',
+                 ticker     => AE::timer(
+                     1,
+                     15 * 60,
+                     sub {
+                         return if $s->state eq 'stopped';
+                         $s->announce('started');
+                     }
+                 )
+                }
+                } defined $s->metadata->{announce}
+            ? [$s->metadata->{announce}]
+            : (),
+            defined $s->metadata->{'announce-list'}
+            ? @{$s->metadata->{'announce-list'}}
+            : ()
         ];
+        $shuffle->($trackers);
+        $shuffle->($_->{urls}) for @$trackers;
+        $trackers;
     }
 );
-
-# Timers
-has _tracker_timer => (is       => 'ro',
-                       isa      => 'Ref',
-                       init_arg => undef,
-                       lazy     => 1,
-                       clearer  => '_clear_tracker_timer',
-                       builder  => '_build_tracker_timer'
-);
-
-sub _build_tracker_timer {
-    my $s = shift;
-    AE::timer(1, 15 * 60, sub { $s->announce() });
-}
 
 sub announce {
     my ($s, $e) = @_;
+    return if $a++ > 10;    # Retry attempts
     for my $tier (@{$s->trackers}) {
+        $s->_announce_tier($e, $tier);
+    }
+}
 
-        #ddx $tier;
-        next if $tier->[0] !~ m[^https?://.+];
-        http_get $tier->[0] . '?info_hash=' . sub {
-            local $_ = shift;
-            s/([\W])/"%" . uc(sprintf("%2.2x",ord($1)))/eg;
-            $_;
+sub _announce_tier {
+    my ($s, $e, $tier) = @_;
+    my @urls = grep {m[^https?://]} @{$tier->{urls}};
+    next if $tier->{urls}[0] !~ m[^https?://.+];
+    http_get $tier->{urls}[0] . '?info_hash=' . sub {
+        local $_ = shift;
+        s/([\W])/"%" . uc(sprintf("%2.2x",ord($1)))/eg;
+        $_;
+        }
+        ->($s->infohash)
+        . ('&peer_id=' . $s->peerid)
+        . ('&uploaded=' . $s->uploaded)
+        . ('&downloaded=' . $s->downloaded)
+        . ('&left=' . $s->_left)
+        . ('&port=' . $s->port)
+        . '&compact=1'
+        . ($e ? '&event=' . $e : ''), sub {
+        my ($body, $hdr) = @_;
+        if ($hdr->{Status} =~ /^2/) {
+            my $reply = bdecode($body);
+            if (defined $reply->{'failure reason'}) {    # XXX - Callback?
+                push @{$tier->{urls}}, shift @{$tier->{urls}};
+                $s->_announce_tier($e, $tier);
+                $tier->{'failure reason'} = $reply->{'failure reason'};
+                $tier->{failures}++;
             }
-            ->($s->infohash)
-            . ('&peer_id=' . $s->peerid)
-            . ('&uploaded=' . $s->uploaded)
-            . ('&downloaded=' . $s->downloaded)
-            . ('&left=' . $s->_left)
-            . ('&port=' . $s->port)
-            . '&compact=1'
-            . ($e ? '&event=' . $e : ''), sub {
-
-            #use Data::Dump;
-            #ddx \@_;
-            my ($body, $hdr) = @_;
-            if ($hdr->{Status} =~ /^2/) {
-                my $reply = bdecode($body);
-                $s->_set_peer_cache(
-                          compact_ipv4(
-                              uncompact_ipv4($s->peer_cache . $reply->{peers})
-                          )
+            else {                                       # XXX - Callback?
+                $tier->{failures} = $tier->{'failure reason'} = 0;
+                $tier->{peers} = compact_ipv4(
+                            uncompact_ipv4($tier->{peers} . $reply->{peers}));
+                $tier->{complete}   = $reply->{complete};
+                $tier->{incomplete} = $reply->{incomplete};
+                $tier->{ticker} = AE::timer(
+                    $reply->{interval} // (15 * 60),
+                    $reply->{interval} // (15 * 60),
+                    sub {
+                        return if $s->state eq 'stopped';
+                        $s->_announce_tier($e, $tier);
+                    }
                 );
             }
-            else {
-                print "error, $hdr->{Status} $hdr->{Reason}\n";
-            }
-            }
-    }
+        }
+        else {    # XXX - Callback?
+            $tier->{'failure reason'}
+                = "HTTP Error: $hdr->{Status} $hdr->{Reason}\n";
+            $tier->{failures}++;
+            push @{$tier->{urls}}, shift @{$tier->{urls}};
+            $s->_announce_tier($e, $tier);
+        }
+        }
 }
 has _choke_timer => (
     is       => 'bare',
@@ -538,7 +568,8 @@ sub _build_peer_timer {
             return if !$s->_left;
 
             # XXX - Initiate connections when we are in Super seed mode?
-            my @cache = uncompact_ipv4($s->peer_cache);
+            my @cache = uncompact_ipv4(join '',
+                                       map { $_->{peers} } @{$s->trackers});
             return if !@cache;
             for my $i (1 .. @cache) {
                 last if $i > 10;    # XXX - Max half open
@@ -906,17 +937,15 @@ sub stop {
     $s->announce('stopped');
     $s->_clear_peers;
     $s->_clear_peer_timer;
-    $s->_clear_tracker_timer;
     $s->_open($_, 'c') for 0 .. $#{$s->files};
     $s->_set_state('stopped');
 }
 
 sub start {
     my $s = shift;
-    $s->announce('started');
+    $s->announce('started') unless $s->state eq 'active';
     $s->peers;
     $s->_peer_timer;
-    $s->_tracker_timer;
     $s->_set_state('active');
 }
 
@@ -924,7 +953,6 @@ sub pause {
     my $s = shift;
     $s->peers;
     $s->_peer_timer;
-    $s->_tracker_timer;
     $s->_set_state('paused');
 }
 
