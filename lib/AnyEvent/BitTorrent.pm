@@ -1,5 +1,5 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.1.1' }
+{ $AnyEvent::BitTorrent::VERSION = 'v0.1.2' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -1200,12 +1200,12 @@ supported but do not perform according to spec yet.
 
 =head2 What will probably be supported in the future?
 
-DHT (which will likely be in a separate dist), fast extensions, multi-tracker
-extensions, IPv6 stuff, file download priorities... I'll get around to those.
+DHT (which will likely be in a separate dist), fast extensions, IPv6 stuff,
+file download priorities... I'll get around to those.
 
 Long term, UDP trackers may be supported.
 
-For a detailed list, see the ToDo file included with this distribution.
+For a detailed list, see the TODO file included with this distribution.
 
 =head2 What will likely never be supported?
 

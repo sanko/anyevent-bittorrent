@@ -215,12 +215,12 @@ supported but do not perform according to spec yet.
 
 ## <a name="What_will_probably_be_supported_in_the_future_" title="Permalink to 'What will probably be supported in the future?'">What will probably be supported in the future?</a>
 
-DHT (which will likely be in a separate dist), fast extensions, multi-tracker
-extensions, IPv6 stuff, file download priorities... I'll get around to those.
+DHT (which will likely be in a separate dist), fast extensions, IPv6 stuff,
+file download priorities... I'll get around to those.
 
 Long term, UDP trackers may be supported.
 
-For a detailed list, see the ToDo file included with this distribution.
+For a detailed list, see the TODO file included with this distribution.
 
 ## <a name="What_will_likely_never_be_supported_" title="Permalink to 'What will likely never be supported?'">What will likely never be supported?</a>
 
