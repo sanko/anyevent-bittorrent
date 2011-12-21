@@ -617,6 +617,7 @@ sub _on_read_incoming {
         return $s->_del_peer($h);
     }
     elsif ($packet->{type} == $HANDSHAKE) {
+        ref $packet->{payload} // return;
         $s->peers->{$h}{reserved} = $packet->{payload}[0];
         return $s->_del_peer($h)
             if $packet->{payload}[1] ne $s->infohash;
@@ -649,8 +650,7 @@ sub _on_read {
             # Do nothing!
         }
         elsif ($packet->{type} == $HANDSHAKE) {
-
-            #ref $packet->{payload} // ddx $packet;
+            ref $packet->{payload} // return;
             $s->peers->{$h}{reserved} = $packet->{payload}[0];
             return $s->_del_peer($h)
                 if $packet->{payload}[1] ne $s->infohash;
