@@ -1,4 +1,9 @@
-Version 0.1.2 | Next Sunday AD | xxxxxxxxxx
+Version 0.1.3 | In the not too distant future | XXXXXXXXXX
+
+    Protocol/Behavioral Changes:
+     * HAVE packets are only sent to non-seed peers
+
+Version 0.1.2 | Early golden time on December 20th, 2011 | afb72191bc
 
     API Changes/Compatibility Information:
      * New start( ), stop( ), pause( ), and state( ) methods
