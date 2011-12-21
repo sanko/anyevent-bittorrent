@@ -797,8 +797,10 @@ sub _on_read {
 }
 
 sub _broadcast {
-    my ($s, $data) = @_;
-    $_->{handle}->push_write($data) for values %{$s->peers};
+    my ($s, $data, $qualifier) = @_;
+    $qualifier //= sub {1};
+    $_->{handle}->push_write($data)
+        for grep { $qualifier->() } values %{$s->peers};
 }
 
 sub _consider_peer {    # Figure out whether or not we find a peer interesting
