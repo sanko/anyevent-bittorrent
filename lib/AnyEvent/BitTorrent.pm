@@ -741,8 +741,14 @@ sub _on_read {
                     }
                     vec($s->{bitfield}, $index, 1) = 1;
                     $s->_trigger_hash_pass($index);
-                    $s->_broadcast(build_have($index))
-                        ;    # XXX - only broadcast to non-seeds
+                    $s->_broadcast(
+                        build_have($index),
+                        sub {
+                            !scalar grep {$_} split '',
+                                substr unpack('b*', ~$_->{bitfield}), 0,
+                                $s->piece_count + 1;
+                        }
+                    );
                     $s->announce('complete')
                         if !scalar grep {$_} split '',
                         substr unpack('b*', ~$s->bitfield), 0,
