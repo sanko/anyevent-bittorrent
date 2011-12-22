@@ -29,7 +29,7 @@ $client = AnyEvent::BitTorrent->new(
 );
 
 #
-like $client->peerid, qr[^-AB\d{4}-.{12}$], 'peerid( )';
+like $client->peerid, qr[^-AB\d{3}[SU]-.{12}$], 'peerid( )';
 is $client->infohash, pack('H*', '4005ae91492980463df37ada424966b04ec30c53'),
     'infohash( )';
 is $client->size, 462163, 'size( )';

@@ -179,8 +179,7 @@ This Module is Lame!
 
   What is currently supported?
     Basic stuff. We can make and handle piece requests. Deal with cancels,
-    disconnect idle peers, unchoke folks. Normal... stuff. HTTP trackers are
-    supported but do not perform according to spec yet.
+    disconnect idle peers, unchoke folks. Normal... stuff. HTTP trackers.
 
   What will probably be supported in the future?
     DHT (which will likely be in a separate dist), fast extensions, IPv6
@@ -218,12 +217,13 @@ Subclassing AnyEvent::BitTorrent
 
 PeerID Specification
     AnyEvent::BitTorrent may be identified in a swarm by its peer id. As of
-    this version, our peer id looks sorta like:
+    this version, our peer id is in 'Azureus style' with a single digit for
+    the Major version, two digits for the minor version, and a single
+    character to indicate stability (stable releases marked with `S',
+    unstable releases marked with `U'). It looks sorta like:
 
-        -AB0110-XXXXXXXXXXXX
-
-    Where `0110' are the Major (`01') and minor (`10') version numbers and
-    the `X's are random filler.
+        -AB110S-  Stable v1.10.0 relese (typically found on CPAN, tagged in repo)
+        -AB110U-  Unstable v1.10.X release (private builds, early testing, etc.)
 
 Bug Reports
     If email is better for you, my address is mentioned below but I would

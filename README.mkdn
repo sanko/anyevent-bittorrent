@@ -23,7 +23,7 @@ Anything you find by skimming the source is likely not ready for public use
 and will be subject to change before `v1.0.0`. Here's the public interface as
 of this version:
 
-## <a name="new_" title="Permalink to '`new( ... )`'">`new( ... )`</a>
+## <a name="new_" title="Permalink to 'new( ... )'">`new( ... )`</a>
 
 This constructor understands the following arguments:
 
@@ -60,73 +60,72 @@ This is a subroutine called whenever a piece passes its
 * `state`
 This must be one of the following:
 
- + `started`
-
+    + `started`
     This is the default. The client will attempt to create new connections, make
     and fill requests, etc. This is normal client behavior.
 
- + `paused`
-
+    + `paused`
     In this state, connections will be made and accepted but no piece requests
     will be made or filled. To resume full, normal behavior, you must call
     [`start( )`](#start_).
 
- + `stopped`
-
+    + `stopped`
     Everything is put on hold. No new outgoing connections are attempted and
     incoming connections are rejected. To resume full, normal behavior, you must
     call [`start( )`](#start_).
 
-## <a name="hashcheck_" title="Permalink to '`hashcheck( [...] )`'">`hashcheck( [...] )`</a>
+## <a name="hashcheck_" title="Permalink to 'hashcheck( [...] )'">`hashcheck( [...] )`</a>
 
 This method expects...
 
 * ...a list of integers. You could use this to check a range of pieces (a
 single file, for example).
 
-    $client->hashcheck( 1 .. 5, 34 .. 56 );
+        $client->hashcheck( 1 .. 5, 34 .. 56 );
+
 * ...a single integer. Only that specific piece is checked.
 
-    $client->hashcheck( 17 );
+        $client->hashcheck( 17 );
+
 * ...nothing. All data related to this torrent will be checked.
 
-    $client->hashcheck( );
+        $client->hashcheck( );
 
 As pieces pass or fail, your `on_hash_pass` and `on_hash_fail` callbacks are
 triggered.
 
-## <a name="start_" title="Permalink to '`start( )`'">`start( )`</a>
+## <a name="start_" title="Permalink to 'start( )'">`start( )`</a>
 
 Sends a 'started' event to trackers and starts performing as a client is
 expected. New connections are made and accepted, requests are made and filled,
 etc.
 
-## <a name="stop_" title="Permalink to '`stop( )`'">`stop( )`</a>
+## <a name="stop_" title="Permalink to 'stop( )'">`stop( )`</a>
 
 Sends a stopped event to trackers, closes all connections, stops attempting
 new outgoing connections, rejects incoming connections and closes all open
 files.
 
-## <a name="pause_" title="Permalink to '`pause( )`'">`pause( )`</a>
+## <a name="pause_" title="Permalink to 'pause( )'">`pause( )`</a>
 
 The client remains mostly active; new connections will be made and accepted,
 etc. but no requests will be made or filled while the client is paused.
 
-## <a name="infohash_" title="Permalink to '`infohash( )`'">`infohash( )`</a>
+## <a name="infohash_" title="Permalink to 'infohash( )'">`infohash( )`</a>
 
 Returns the 20-byte SHA1 hash of the value of the info key from the metadata
 file.
 
-## <a name="peerid_" title="Permalink to '`peerid( )`'">`peerid( )`</a>
+## <a name="peerid_" title="Permalink to 'peerid( )'">`peerid( )`</a>
 
 Returns the 20 byte string used to identify the client. Please see the
 [spec](#PeerID_Specification) below.
 
-## <a name="port_" title="Permalink to '`port( )`'">`port( )`</a>
+## <a name="port_" title="Permalink to 'port( )'">`port( )`</a>
 
 Returns the port number the client is listening on.
 
-## <a name="size_" title="Permalink to '`size( )`'">`size( )`</a>
+## <a name="size_" title="Permalink to 'size( )'">`size( )`</a>
 
 Returns the total size of all [files](#files_) described in the torrent's
 metadata.
@@ -134,36 +133,36 @@ metadata.
 Note that this value is recalculated every time you call this method. If you
 need it more than occasionally, it may be best to cache it yourself.
 
-## <a name="name_" title="Permalink to '`name( )`'">`name( )`</a>
+## <a name="name_" title="Permalink to 'name( )'">`name( )`</a>
 
 Returns the UTF-8 encoded string the metadata suggests we save the file (or
 directory, in the case of multi-file torrents) under.
 
-## <a name="uploaded_" title="Permalink to '`uploaded( )`'">`uploaded( )`</a>
+## <a name="uploaded_" title="Permalink to 'uploaded( )'">`uploaded( )`</a>
 
 Returns the total amount uploaded to remote peers.
 
-## <a name="downloaded_" title="Permalink to '`downloaded( )`'">`downloaded( )`</a>
+## <a name="downloaded_" title="Permalink to 'downloaded( )'">`downloaded( )`</a>
 
 Returns the total amount downloaded from other peers.
 
-## <a name="left_" title="Permalink to '`left( )`'">`left( )`</a>
+## <a name="left_" title="Permalink to 'left( )'">`left( )`</a>
 
 Returns the approximate amount based on the pieces we still
 [want](#wanted_) multiplied by the [size of pieces](#piece_length_).
 
-## <a name="piece_length_" title="Permalink to '`piece_length( )`'">`piece_length( )`</a>
+## <a name="piece_length_" title="Permalink to 'piece_length( )'">`piece_length( )`</a>
 
 Returns the number of bytes in each piece the file or files are split into.
 For the purposes of transfer, files are split into fixed-size pieces which are
 all the same length except for possibly the last one which may be truncated.
 
-## <a name="bitfield_" title="Permalink to '`bitfield( )`'">`bitfield( )`</a>
+## <a name="bitfield_" title="Permalink to 'bitfield( )'">`bitfield( )`</a>
 
 Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has is set to one and the rest are set to zero.
 
-## <a name="wanted_" title="Permalink to '`wanted( )`'">`wanted( )`</a>
+## <a name="wanted_" title="Permalink to 'wanted( )'">`wanted( )`</a>
 
 Returns a packed binary string in ascending order (ready for `vec()`). Each
 index that the client has or simply does not want is set to zero and the rest
@@ -173,7 +172,7 @@ Currently, this is just `~ $client->bitfield( )` but if your subclass has
 file based priorities, you could only 'want' the pieces which lie inside of
 the files you want.
 
-## <a name="files_" title="Permalink to '`files( )`'">`files( )`</a>
+## <a name="files_" title="Permalink to 'files( )'">`files( )`</a>
 
 Returns a list of hash references with the following keys:
 
@@ -185,13 +184,13 @@ Which is the size of file in bytes.
 
 Which is the absolute path of the file.
 
-## <a name="peers_" title="Permalink to '`peers( )`'">`peers( )`</a>
+## <a name="peers_" title="Permalink to 'peers( )'">`peers( )`</a>
 
 Returns the list of currently connected peers. The organization of these peers
 is not yet final so... don't write anything you don't expect to break before
 we hit `v1.0.0`.
 
-## <a name="state_" title="Permalink to '`state( )`'">`state( )`</a>
+## <a name="state_" title="Permalink to 'state( )'">`state( )`</a>
 
 Returns `active` if the client is [started](#start_), `paused` if client
 is [paused](#pause_), and `stopped` if the client is currently
@@ -203,15 +202,14 @@ Yeah, I said it.
 
 There are a few things a BitTorrent client must implement (to some degree) in
 order to interact with other clients in a modern day swarm.
-[AnyEvent::BitTorrent](http://search.cpan.org/perldoc?AnyEvent::BitTorrent) is meant to meet that bare
-minimum but it's based on [Moose](http://search.cpan.org/perldoc?Moose) or [Mouse](http://search.cpan.org/perldoc?Mouse) so you could always
+[AnyEvent::BitTorrent](https://metacpan.org/module/AnyEvent::BitTorrent) is meant to meet that bare
+minimum but it's based on [Moose](https://metacpan.org/module/Moose) or [Mouse](https://metacpan.org/module/Mouse) so you could always
 subclass it to add more advanced functionality. Hint, hint!
 
 ## <a name="What_is_currently_supported_" title="Permalink to 'What is currently supported?'">What is currently supported?</a>
 
 Basic stuff. We can make and handle piece requests. Deal with cancels,
-disconnect idle peers, unchoke folks. Normal... stuff. HTTP trackers are
-supported but do not perform according to spec yet.
+disconnect idle peers, unchoke folks. Normal... stuff. HTTP trackers.
 
 ## <a name="What_will_probably_be_supported_in_the_future_" title="Permalink to 'What will probably be supported in the future?'">What will probably be supported in the future?</a>
 
@@ -225,7 +223,7 @@ For a detailed list, see the TODO file included with this distribution.
 ## <a name="What_will_likely_never_be_supported_" title="Permalink to 'What will likely never be supported?'">What will likely never be supported?</a>
 
 We can't have nice things. Protocol encryption, uTP, endgame tricks, ...these
-will probably never be included in [AnyEvent::BitTorrent](http://search.cpan.org/perldoc?AnyEvent::BitTorrent).
+will probably never be included in [AnyEvent::BitTorrent](https://metacpan.org/module/AnyEvent::BitTorrent).
 
 ## <a name="What_should_I_use_instead_" title="Permalink to 'What should I use instead?'">What should I use instead?</a>
 
@@ -235,9 +233,9 @@ suggest (in no particular order):
 
 * [BitFlu](http://bitflu.workaround.ch/). It's written in Perl but you'll
 still need to be on a Linux, *BSD, et al. system to use it.
-* [Net::BitTorrent](http://search.cpan.org/perldoc?Net::BitTorrent) ...in the future. I _do not_ suggest using either
+* [Net::BitTorrent](https://metacpan.org/module/Net::BitTorrent) ...in the future. I _do not_ suggest using either
 the current stable or unstable versions found on CPAN. The next version is
-being worked on and will be based on [Reflex](http://search.cpan.org/perldoc?Reflex).
+being worked on and will be based on [Reflex](https://metacpan.org/module/Reflex).
 
 If you're working on a Perl based client and would like me to link to it, send
 a bug report to the tracker [listed below](#Bug_Reports).
@@ -248,18 +246,19 @@ TODO
 
 If you subclass this module and change the way it functions to that which in
 any way proves harmful to individual peers or the swarm at large, rather than
-damage [AnyEvent::BitTorrent](http://search.cpan.org/perldoc?AnyEvent::BitTorrent)'s reputation, override the peerid attribute.
+damage [AnyEvent::BitTorrent](https://metacpan.org/module/AnyEvent::BitTorrent)'s reputation, override the peerid attribute.
 Thanks.
 
 # <a name="PeerID_Specification" title="Permalink to 'PeerID Specification'">PeerID Specification</a>
 
-[AnyEvent::BitTorrent](http://search.cpan.org/perldoc?AnyEvent::BitTorrent) may be identified in a swarm by its peer id. As of
-this version, our peer id looks sorta like:
+[AnyEvent::BitTorrent](https://metacpan.org/module/AnyEvent::BitTorrent) may be identified in a swarm by its peer id. As of
+this version, our peer id is in 'Azureus style' with a single digit for
+the Major version, two digits for the minor version, and a single
+character to indicate stability (stable releases marked with `S`,
+unstable releases marked with `U`). It looks sorta like:
 
-    -AB0110-XXXXXXXXXXXX
-
-Where `0110` are the Major (`01`) and minor (`10`) version numbers and the
-`X`s are random filler.
+        -AB110S-  Stable v1.10.0 relese (typically found on CPAN, tagged in repo)
+        -AB110U-  Unstable v1.10.X release (private builds, early testing, etc.)
 
 # <a name="Bug_Reports" title="Permalink to 'Bug Reports'">Bug Reports</a>
 
@@ -272,7 +271,7 @@ is already known (...I probably won't file bug reports to myself).
 
 # <a name="See_Also" title="Permalink to 'See Also'">See Also</a>
 
-[Net::BitTorrent::Protocol](http://search.cpan.org/perldoc?Net::BitTorrent::Protocol) - The package which does all of the wire protocol
+[Net::BitTorrent::Protocol](https://metacpan.org/module/Net::BitTorrent::Protocol) - The package which does all of the wire protocol
 level heavy lifting.
 
 # <a name="Author" title="Permalink to 'Author'">Author</a>

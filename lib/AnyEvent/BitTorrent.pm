@@ -78,8 +78,10 @@ has peerid => (
         pack(
             'a20',
             (sprintf(
-                 '-AB%02d%02d-%7s%-5s',
+                 '-AB%01d%02d%1s-%7s%-5s',
                  ($AnyEvent::BitTorrent::VERSION =~ m[^v(\d+)\.(\d+)]),
+                 ($AnyEvent::BitTorrent::VERSION =~ m[\.[^\d]+$]? 'U':'S'),
+
                  (  join '',
                     map {
                         ['A' .. 'Z', 'a' .. 'z', 0 .. 9, qw[- . _ ~]]
@@ -1224,8 +1226,7 @@ subclass it to add more advanced functionality. Hint, hint!
 =head2 What is currently supported?
 
 Basic stuff. We can make and handle piece requests. Deal with cancels,
-disconnect idle peers, unchoke folks. Normal... stuff. HTTP trackers are
-supported but do not perform according to spec yet.
+disconnect idle peers, unchoke folks. Normal... stuff. HTTP trackers.
 
 =head2 What will probably be supported in the future?
 
@@ -1273,12 +1274,13 @@ Thanks.
 =head1 PeerID Specification
 
 L<AnyEvent::BitTorrent> may be identified in a swarm by its peer id. As of
-this version, our peer id looks sorta like:
+this version, our peer id is in 'Azureus style' with a single digit for the
+Major version, two digits for the minor version, and a single character to
+indicate stability (stable releases marked with C<S>, unstable releases marked
+with C<U>). It looks sorta like:
 
-    -AB0110-XXXXXXXXXXXX
-
-Where C<0110> are the Major (C<01>) and minor (C<10>) version numbers and the
-C<X>s are random filler.
+    -AB110S-  Stable v1.10.0 relese (typically found on CPAN, tagged in repo)
+    -AB110U-  Unstable v1.10.X release (private builds, early testing, etc.)
 
 =head1 Bug Reports
 
