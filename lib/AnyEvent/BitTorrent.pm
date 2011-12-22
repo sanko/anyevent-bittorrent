@@ -168,9 +168,10 @@ sub _build_files {
     defined $s->metadata->{info}{files} ?
         [
         map {
-            {fh     => undef,
-             mode   => 'c',
-             length => $_->{length},
+            {priority => 1,
+             fh       => undef,
+             mode     => 'c',
+             length   => $_->{length},
              path =>
                  File::Spec->rel2abs(
                      File::Spec->catfile($s->basedir, $s->name, @{$_->{path}})
@@ -179,9 +180,10 @@ sub _build_files {
             } @{$s->metadata->{info}{files}}
         ]
         : [
-          {fh     => undef,
-           mode   => 'c',
-           length => $s->metadata->{info}{length},
+          {priority => 1,
+           fh       => undef,
+           mode     => 'c',
+           length   => $s->metadata->{info}{length},
            path =>
                File::Spec->rel2abs(File::Spec->catfile($s->basedir, $s->name))
           }
@@ -512,7 +514,7 @@ has _fill_requests_timer => (
             15, 1,
             sub {    # XXX - Limit by time/bandwidth
                 return if $s->state ne 'active';
-                my @waiting = grep { scalar @{$_->{remote_requests}} }
+                my @waiting = grep { scalar @{$_->{remote_requests} // []} }
                     values %{$s->peers};
                 return if !@waiting;
                 my $p          = $waiting[rand $#waiting];
@@ -828,19 +830,38 @@ has working_pieces => (is       => 'ro',
                        default  => sub { {} }
 );
 
+sub _file_to_range {
+    my ($s, $file) = @_;
+    my $start = 0;
+    for (0 .. $file - 1) {
+        $start += $s->files->[$_]->{length};
+    }
+    my $end = $start + $s->files->[$file]->{length};
+    $start = $start / $s->piece_length;
+    $end   = $end / $s->piece_length;
+    (int($start) .. int $end + ($end != int($end) ? 0 : +1));
+}
+
 sub _request_pieces {
     my ($s, $p) = @_;
     return if $s->state ne 'active';
     use Scalar::Util qw[weaken];
     weaken $p;
     $p // return;
-    my $relevence = unpack('b*', $p->{bitfield}) & unpack('b*', $s->wanted);
-
-    #use Data::Dump;
+    $p->{handle} // return;
     my @indexes;
     if (scalar keys %{$s->working_pieces} < 10) {   # XXX - Max working pieces
-        my $x = -1;
-        @indexes = map { $x++; $_ ? $x : () } split '', $relevence;
+
+        for my $findex (0 .. $#{$s->files}) {
+            for my $index ($s->_file_to_range($findex)) {
+                push @indexes, map {
+                    vec($p->{bitfield}, $index, 1)
+                        && !vec($s->bitfield, $index, 1) ?
+                        $index
+                        : ()
+                } 1 .. $s->{files}[$findex]{priority};
+            }
+        }
     }
     else {
         @indexes = keys %{$s->working_pieces};
