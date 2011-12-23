@@ -80,7 +80,7 @@ has peerid => (
             (sprintf(
                  '-AB%01d%02d%1s-%7s%-5s',
                  ($AnyEvent::BitTorrent::VERSION =~ m[^v(\d+)\.(\d+)]),
-                 ($AnyEvent::BitTorrent::VERSION =~ m[\.[^\d]+$] ? 'U' : 'S'),
+                 ($AnyEvent::BitTorrent::VERSION =~ m[\_] ? 'U' : 'S'),
                  (join '',
                   map {
                       ['A' .. 'Z', 'a' .. 'z', 0 .. 9, qw[- . _ ~]]
