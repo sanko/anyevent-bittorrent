@@ -19,9 +19,7 @@ $client = AnyEvent::BitTorrent->new(
     path         => $torrent,
     on_hash_pass => sub {
         pass 'Got piece number ' . pop;
-        return
-            if scalar grep {$_} split '',
-            substr unpack('b*', $client->wanted), 0, $client->piece_count + 1;
+        return if !$client->complete;
         $client->stop;
         $cv->send;
     },

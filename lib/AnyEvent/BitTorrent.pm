@@ -114,7 +114,7 @@ sub wanted {
 
 sub complete {
     my $s = shift;
-    return scalar grep {$_} split '',
+    return !scalar grep {$_} split '',
         substr unpack('b*', $s->wanted), 0, $s->piece_count + 1;
 }
 
