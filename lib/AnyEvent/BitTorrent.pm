@@ -80,13 +80,12 @@ has peerid => (
             (sprintf(
                  '-AB%01d%02d%1s-%7s%-5s',
                  ($AnyEvent::BitTorrent::VERSION =~ m[^v(\d+)\.(\d+)]),
-                 ($AnyEvent::BitTorrent::VERSION =~ m[\.[^\d]+$]? 'U':'S'),
-
-                 (  join '',
-                    map {
-                        ['A' .. 'Z', 'a' .. 'z', 0 .. 9, qw[- . _ ~]]
-                        ->[rand(66)]
-                        } 1 .. 7
+                 ($AnyEvent::BitTorrent::VERSION =~ m[\.[^\d]+$] ? 'U' : 'S'),
+                 (join '',
+                  map {
+                      ['A' .. 'Z', 'a' .. 'z', 0 .. 9, qw[- . _ ~]]
+                      ->[rand(66)]
+                      } 1 .. 7
                  ),
                  [qw[KaiLi April]]->[rand 2]
              )
@@ -432,6 +431,8 @@ sub _announce_tier {
     my ($s, $e, $tier) = @_;
     my @urls = grep {m[^https?://]} @{$tier->{urls}};
     next if $tier->{urls}[0] !~ m[^https?://.+];
+    local $AnyEvent::HTTP::USERAGENT
+        = 'AnyEvent::BitTorrent/' . $AnyEvent::BitTorrent::VERSION;
     http_get $tier->{urls}[0] . '?info_hash=' . sub {
         local $_ = shift;
         s/([\W])/"%" . uc(sprintf("%2.2x",ord($1)))/eg;
