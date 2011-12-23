@@ -99,7 +99,19 @@ has bitfield => (is         => 'ro',
                  lazy_build => 1
 );
 sub _build_bitfield { pack 'b*', "\0" x shift->piece_count }
-sub wanted { ~shift->bitfield }
+
+sub wanted {
+    my $s      = shift;
+    my $wanted = '';
+    for my $findex (0 .. $#{$s->files}) {
+        my $prio = !!$s->files->[$findex]{priority};
+        for my $index ($s->_file_to_range($findex)) {
+            vec($wanted, $index, 1) = $prio && !vec($s->bitfield, $index, 1);
+        }
+    }
+    $wanted;
+}
+
 sub complete {
     my $s = shift;
     return scalar grep {$_} split '',
@@ -1192,9 +1204,7 @@ Returns a packed binary string in ascending order (ready for C<vec()>). Each
 index that the client has or simply does not want is set to zero and the rest
 are set to one.
 
-Currently, this is just C<< ~ $client->bitfield( ) >> but if your subclass has
-file based priorities, you could only 'want' the pieces which lie inside of
-the files you want.
+This value is calculated every time the method is called. Keep that in mind.
 
 =head2 C<complete( )>
 
@@ -1218,6 +1228,16 @@ Which is the size of file in bytes.
 =item C<path>
 
 Which is the absolute path of the file.
+
+=item C<priority>
+
+Download priority for this file. By default, all files have a priority of
+C<1>. There is no built in scale; the higher the priority, the better odds a
+piece from it will be downloaded first. Setting a file's priority to C<1000>
+while the rest are still at C<1> will likely force the file to complete before
+any other file is started.
+
+We do not download files with a priority of zero.
 
 =back
 
