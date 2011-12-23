@@ -172,6 +172,15 @@ Currently, this is just `~ $client->bitfield( )` but if your subclass has
 file based priorities, you could only 'want' the pieces which lie inside of
 the files you want.
 
+## <a name="complete_" title="Permalink to 'complete( )'">`complete( )`</a>
+
+Returns true if we have downloaded everything we [wanted](#wanted_) which is
+not to say that we have all data and can [seed](#seed_).
+
+## <a name="seed_" title="Permalink to 'seed( )'">`seed( )`</a>
+
+Returns true if we have all data related to the torrent.
+
 ## <a name="files_" title="Permalink to 'files( )'">`files( )`</a>
 
 Returns a list of hash references with the following keys:

@@ -100,6 +100,16 @@ has bitfield => (is         => 'ro',
 );
 sub _build_bitfield { pack 'b*', "\0" x shift->piece_count }
 sub wanted { ~shift->bitfield }
+sub complete {
+    my $s = shift;
+    return scalar grep {$_} split '',
+        substr unpack('b*', $client->wanted), 0, $client->piece_count + 1;
+}
+
+sub seed {
+    return scalar grep {$_} split '',
+        substr unpack('b*', ~$client->bitfield), 0, $client->piece_count + 1;
+}
 
 sub _left {
     my $s = shift;
@@ -1185,6 +1195,15 @@ are set to one.
 Currently, this is just C<< ~ $client->bitfield( ) >> but if your subclass has
 file based priorities, you could only 'want' the pieces which lie inside of
 the files you want.
+
+=head2 C<complete( )>
+
+Returns true if we have downloaded everything we L<wanted|/"wanted( )"> which
+is not to say that we have all data and can L<seed|/"seed( )">.
+
+=head2 C<seed( )>
+
+Returns true if we have all data related to the torrent.
 
 =head2 C<files( )>
 
