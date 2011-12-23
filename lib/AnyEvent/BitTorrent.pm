@@ -6,7 +6,7 @@ use AnyEvent::Socket;
 use AnyEvent::HTTP;
 use Any::Moose;
 use Any::Moose '::Util::TypeConstraints';
-use Fcntl qw[SEEK_SET /O_/ :flock];
+use Fcntl qw[/SEEK_/ /O_/ :flock];
 use Digest::SHA qw[sha1];
 use File::Spec;
 use File::Path;
@@ -115,12 +115,13 @@ sub wanted {
 sub complete {
     my $s = shift;
     return scalar grep {$_} split '',
-        substr unpack('b*', $client->wanted), 0, $client->piece_count + 1;
+        substr unpack('b*', $s->wanted), 0, $s->piece_count + 1;
 }
 
 sub seed {
+    my $s = shift;
     return scalar grep {$_} split '',
-        substr unpack('b*', ~$client->bitfield), 0, $client->piece_count + 1;
+        substr unpack('b*', ~$s->bitfield), 0, $s->piece_count + 1;
 }
 
 sub _left {
@@ -251,6 +252,54 @@ sub _open {
     else              {return}
     return $s->files->[$i]->{mode} = $m;
 }
+has piece_cache => (is => 'ro', isa => 'HashRef', default => sub { {} });
+
+sub _write_cache {
+    my ($s, $f, $o, $d) = @_;
+    my $path =
+        File::Spec->catfile($s->basedir,
+                            (scalar @{$s->files} == 1 ? () : $s->name),
+                            '~ABPartFile_-'
+                                . uc(
+                                    substr(unpack('H*', $s->infohash), 0, 10))
+                                . '.dat'
+        );
+    my @split = File::Spec->splitdir($path);
+    pop @split;    # File name itself
+    my $dir = File::Spec->catdir(@split);
+    File::Path::mkpath($dir) if !-d $dir;
+    sysopen(my ($fh), $path, O_WRONLY | O_CREAT)
+        || return;
+    flock $fh, LOCK_EX;
+    my $pos = sysseek $fh, 0, SEEK_CUR;
+    my $w = syswrite $fh, $d;
+    flock $fh, LOCK_UN;
+    close $fh;
+    $s->piece_cache->{$f}{$o} = $pos;
+    return $w;
+}
+
+sub _read_cache {
+    my ($s, $f, $o, $l) = @_;
+    $s->piece_cache->{$f} // return;
+    $s->piece_cache->{$f}{$o} // return;
+    my $path =
+        File::Spec->catfile($s->basedir,
+                            (scalar @{$s->files} == 1 ? () : $s->name),
+                            '~ABPartFile_-'
+                                . uc(
+                                    substr(unpack('H*', $s->infohash), 0, 10))
+                                . '.dat'
+        );
+    sysopen(my ($fh), $path, O_RDONLY)
+        || return;
+    flock $fh, LOCK_SH;
+    sysseek $fh, $s->piece_cache->{$f}{$o}, SEEK_SET;
+    my $w = sysread $fh, my ($d), $l;
+    flock $fh, LOCK_UN;
+    close $fh;
+    return $d;
+}
 
 sub _read {
     my ($s, $index, $offset, $length) = @_;
@@ -271,11 +320,10 @@ READ: while ((defined $length) && ($length > 0)) {
             ?
             ($s->files->[$file_index]->{length} - $total_offset)
             : $length;
-
-        # XXX - Keep file open for a while
         if (   (!-f $s->files->[$file_index]->{path})
             || (!$s->_open($file_index, 'r')))
-        {   $data .= "\0" x $this_read;
+        {   $data .= $s->_read_cache($file_index, $total_offset, $this_read)
+                // ("\0" x $this_read);
         }
         else {
             sysseek $s->files->[$file_index]->{fh}, $total_offset, SEEK_SET;
@@ -308,10 +356,16 @@ WRITE: while ((defined $data) && (length $data > 0)) {
             ?
             ($s->files->[$file_index]->{length} - $total_offset)
             : length $data;
-        $s->_open($file_index, 'w') || die $!;
-        sysseek $s->files->[$file_index]->{fh}, $total_offset, SEEK_SET;
-        my $w = syswrite $s->files->[$file_index]->{fh}, substr $data, 0,
-            $this_write, '';
+        if ($s->files->[$file_index]->{priority} == 0) {
+            $s->_write_cache($file_index, $total_offset, substr $data, 0,
+                             $this_write, '');
+        }
+        else {
+            $s->_open($file_index, 'w') || die $!;
+            sysseek $s->files->[$file_index]->{fh}, $total_offset, SEEK_SET;
+            my $w = syswrite $s->files->[$file_index]->{fh}, substr $data, 0,
+                $this_write, '';
+        }
         $file_index++;
         last WRITE if not defined $s->files->[$file_index];
         $total_offset = 0;
@@ -1104,6 +1158,12 @@ call L<C<start( )>|/"start( )">.
 
 =back
 
+=item C<piece_cache>
+
+This is the index returned by L<C<piece_cache( )>|/"piece_cache( )"> in a
+previous instance. Using this should make a complete resume system a trivial
+task.
+
 =back
 
 =head2 C<hashcheck( [...] )>
@@ -1252,6 +1312,12 @@ we hit C<v1.0.0>.
 Returns C<active> if the client is L<started|/"start( )">, C<paused> if client
 is L<paused|/"pause( )">, and C<stopped> if the client is currently
 L<stopped|/"stop( )">.
+
+=head2 C<piece_cache( )>
+
+Pieces which overlap files with zero priority are stored in a part file which
+is indexed internally. To save this index (for resume, etc.) store the values
+returned by this method and pass it to L<new( )|/"new( )">.
 
 =head1 This Module is Lame!
 

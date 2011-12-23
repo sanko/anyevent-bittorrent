@@ -74,6 +74,11 @@ This must be one of the following:
     incoming connections are rejected. To resume full, normal behavior, you must
     call [`start( )`](#start_).
 
+* `piece_cache`
+
+This is the index returned by [`piece_cache( )`](#piece_cache_) in a previous
+instance. Using this should make a complete resume system a trivial task.
+
 ## <a name="hashcheck_" title="Permalink to 'hashcheck( [...] )'">`hashcheck( [...] )`</a>
 
 This method expects...
@@ -212,6 +217,12 @@ we hit `v1.0.0`.
 Returns `active` if the client is [started](#start_), `paused` if client
 is [paused](#pause_), and `stopped` if the client is currently
 [stopped](#stop_).
+
+## <a name="piece_cache_" title="Permalink to 'piece_cache( )'">`piece_cache( )`</a>
+
+Pieces which overlap files with zero priority are stored in a part file which
+is indexed internally. To save this index (for resume, etc.) store the values
+returned by this method and pass it to [`new( )`](#new_).
 
 # <a name="This_Module_is_Lame_" title="Permalink to 'This Module is Lame!'">This Module is Lame!</a>
 
