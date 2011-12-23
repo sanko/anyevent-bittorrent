@@ -68,6 +68,11 @@ Methods
             attempted and incoming connections are rejected. To resume full,
             normal behavior, you must call `start( )'.
 
+    `piece_cache'
+        This is the index returned by `piece_cache( )' in a previous
+        instance. Using this should make a complete resume system a trivial
+        task.
+
   `hashcheck( [...] )'
     This method expects...
 
@@ -146,9 +151,15 @@ Methods
     Each index that the client has or simply does not want is set to zero
     and the rest are set to one.
 
-    Currently, this is just `~ $client->bitfield( )' but if your subclass
-    has file based priorities, you could only 'want' the pieces which lie
-    inside of the files you want.
+    This value is calculated every time the method is called. Keep that in
+    mind.
+
+  `complete( )'
+    Returns true if we have downloaded everything we wanted which is not to
+    say that we have all data and can seed.
+
+  `seed( )'
+    Returns true if we have all data related to the torrent.
 
   `files( )'
     Returns a list of hash references with the following keys:
@@ -159,6 +170,16 @@ Methods
     `path'
         Which is the absolute path of the file.
 
+    `priority'
+        Download priority for this file. By default, all files have a
+        priority of `1'. There is no built in scale; the higher the
+        priority, the better odds a piece from it will be downloaded first.
+        Setting a file's priority to `1000' while the rest are still at `1'
+        will likely force the file to complete before any other file is
+        started.
+
+        We do not download files with a priority of zero.
+
   `peers( )'
     Returns the list of currently connected peers. The organization of these
     peers is not yet final so... don't write anything you don't expect to
@@ -167,6 +188,11 @@ Methods
   `state( )'
     Returns `active' if the client is started, `paused' if client is paused,
     and `stopped' if the client is currently stopped.
+
+  `piece_cache( )'
+    Pieces which overlap files with zero priority are stored in a part file
+    which is indexed internally. To save this index (for resume, etc.) store
+    the values returned by this method and pass it to new( ).
 
 This Module is Lame!
     Yeah, I said it.
