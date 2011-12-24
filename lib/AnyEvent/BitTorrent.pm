@@ -826,9 +826,9 @@ sub _on_read {
                     $s->_broadcast(
                         build_have($index),
                         sub {
-                            !scalar grep {$_} split '',
-                                substr unpack('b*', ~$_->{bitfield}), 0,
-                                $s->piece_count + 1;
+                            !!!index substr(unpack('b*', $_->{bitfield}),
+                                            0, $s->piece_count + 1),
+                                0, 0;
                         }
                     );
                     $s->announce('complete')
