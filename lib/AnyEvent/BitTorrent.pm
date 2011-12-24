@@ -65,6 +65,14 @@ has path => (
             ),
             required => 1
 );
+has reserved => (is         => 'ro',
+                 isa        => subtype(as 'Str' => where { length $_ == 8 }),
+                 lazy_build => 1
+);
+
+sub _build_reserved {
+    "\0" x 8;
+}
 has peerid => (
     is  => 'ro',
     isa => subtype(
@@ -673,10 +681,9 @@ sub _build_peer_timer {
                         my ($h, $host, $port, $retry) = @_;
                         $s->_add_peer($handle);
                         $handle->push_write(
-                                         build_handshake(
-                                             "\0\0\0\0\0\0\0\0", $s->infohash,
-                                             $s->peerid
-                                         )
+                                    build_handshake(
+                                        $s->reserved, $s->infohash, $s->peerid
+                                    )
                         );
                     },
                     on_eof => sub {
@@ -705,7 +712,7 @@ sub _on_read_incoming {
             if $packet->{payload}[1] ne $s->infohash;
         $s->peers->{$h}{peerid} = $packet->{payload}[2];
         $h->push_write(
-               build_handshake("\0\0\0\0\0\0\0\0", $s->infohash, $s->peerid));
+                     build_handshake($s->reserved, $s->infohash, $s->peerid));
         $h->push_write(build_bitfield($s->bitfield));
         $s->peers->{$h}{timeout}
             = AE::timer(60, 0, sub { $s->_del_peer($h) });
