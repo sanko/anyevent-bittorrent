@@ -196,7 +196,7 @@ Which is the size of file in bytes.
 
 Which is the absolute path of the file.
 
-`priority`
+* `priority`
 
 Download priority for this file. By default, all files have a priority of
 C<1>. There is no built in scale; the higher the priority, the better odds a
