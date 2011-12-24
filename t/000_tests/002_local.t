@@ -25,7 +25,7 @@ note 'HTTP tracker @ http://'
     . $tracker->port
     . '/announce.pl';
 my %client;
-my @ports = 1338 .. 1340;
+my @ports = 1338 .. 1339;
 for my $port (@ports) {
     $client{$port} = AnyEvent::BitTorrent->new(
         port    => $port,
