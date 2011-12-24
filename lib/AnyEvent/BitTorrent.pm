@@ -478,7 +478,8 @@ has trackers => (
                          return if $s->state eq 'stopped';
                          $s->announce('started');
                      }
-                 )
+                 ),
+                 failures => 0
                 }
                 } defined $s->metadata->{announce}
             ? [$s->metadata->{announce}]
@@ -504,7 +505,9 @@ sub announce {
 sub _announce_tier {
     my ($s, $e, $tier) = @_;
     my @urls = grep {m[^https?://]} @{$tier->{urls}};
-    next if $tier->{urls}[0] !~ m[^https?://.+];
+    return if $tier->{failures} > 5;
+    return if $#{$tier->{urls}} < 0;                 # Empty tier?
+    return if $tier->{urls}[0] !~ m[^https?://.+];
     local $AnyEvent::HTTP::USERAGENT
         = 'AnyEvent::BitTorrent/' . $AnyEvent::BitTorrent::VERSION;
     http_get $tier->{urls}[0] . '?info_hash=' . sub {
