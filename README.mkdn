@@ -199,7 +199,7 @@ Which is the absolute path of the file.
 * `priority`
 
 Download priority for this file. By default, all files have a priority of
-C<1>. There is no built in scale; the higher the priority, the better odds a
+`1`. There is no built in scale; the higher the priority, the better odds a
 piece from it will be downloaded first. Setting a file's priority to `1000`
 while the rest are still at `1` will likely force the file to complete before
 any other file is started.
