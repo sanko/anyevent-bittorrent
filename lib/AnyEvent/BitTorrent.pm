@@ -888,8 +888,11 @@ sub _broadcast {
 sub _consider_peer {    # Figure out whether or not we find a peer interesting
     my ($s, $p) = @_;
     return if $s->state ne 'active';
-    my $relevence = unpack('b*', $p->{bitfield}) & unpack('b*', $s->wanted);
-    my $interesting = (index(unpack('b*', $relevence), 1, 0) != -1) ? 1 : 0;
+    my $relevence = $p->{bitfield} & $s->wanted;
+    my $interesting
+        = (
+         index(substr(unpack('b*', $relevence), 0, $s->piece_count + 1), 1, 0)
+             != -1) ? 1 : 0;
     if ($interesting) {
         if (!$p->{local_interested}) {
             $p->{local_interested} = 1;
