@@ -9,5 +9,7 @@ META.json
 META.yml
 README
 t/000_tests/001_rama.t
+t/800_utils/Tracker.pm
+t/800_utils/Tracker/HTTP.pm
 't/900_data/rama\'s test creator - ia test.torrent'
 TODO
