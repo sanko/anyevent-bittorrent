@@ -18,7 +18,7 @@ my $to = AE::timer(90, 0, sub { diag 'Timeout'; $cv->send });
 my $tracker =
     t::800_utils::Tracker::HTTP->new(host     => '127.0.0.1',
                                      interval => 20,
-                                     port     => 1123
+                                     port     => 0
     );
 note 'HTTP tracker @ http://'
     . $tracker->host . ':'
