@@ -594,29 +594,29 @@ has _fill_requests_timer => (
             15, 1,
             sub {    # XXX - Limit by time/bandwidth
                 return if $s->state ne 'active';
-                my @waiting = grep { scalar @{$_->{remote_requests} // []} }
+                my @waiting = grep { scalar @{$_->{remote_requests}} }
                     values %{$s->peers};
                 return if !@waiting;
-                my $p          = $waiting[rand $#waiting];
                 my $total_sent = 0;
-                while ($total_sent < 2**20 && @{$p->{remote_requests}}) {
-                    my $req = shift @{$p->{remote_requests}};
+                while (@waiting && $total_sent < 2**20) {
+                    my $p = splice(@waiting, rand @waiting, 1, ());
+                    while ($total_sent < 2**20 && @{$p->{remote_requests}}) {
+                        my $req = shift @{$p->{remote_requests}};
 
-                    # XXX - If piece is bad locally
-                    #          if remote supports fast ext
-                    #             send reject
-                    #          else
-                    #             simply return
-                    #       else...
-                    $p->{handle}->push_write(
-                               build_piece($req->[0],
-                                           $req->[1],
-                                           $s->_read(
-                                               $req->[0], $req->[1], $req->[2]
-                                           )
-                               )
-                    );
-                    $total_sent += $req->[2];
+                        # XXX - If piece is bad locally
+                        #          if remote supports fast ext
+                        #             send reject
+                        #          else
+                        #             simply return
+                        #       else...
+                        $p->{handle}->push_write(
+                                build_piece(
+                                    $req->[0], $req->[1],
+                                    $s->_read($req->[0], $req->[1], $req->[2])
+                                )
+                        );
+                        $total_sent += $req->[2];
+                    }
                 }
                 $s->_set_uploaded($s->uploaded + $total_sent);
             }
