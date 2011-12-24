@@ -565,7 +565,7 @@ has _choke_timer => (
     default  => sub {
         my $s = shift;
         AE::timer(
-            10, 40,
+            15, 45,
             sub {
                 return if $s->state ne 'active';
                 my @interested
