@@ -822,7 +822,6 @@ sub _on_read {
                             if $s->_write($index, 0, $piece) == length $piece;
                     }
                     vec($s->{bitfield}, $index, 1) = 1;
-                    $s->_trigger_hash_pass($index);
                     $s->_broadcast(
                         build_have($index),
                         sub {
@@ -838,6 +837,7 @@ sub _on_read {
                     $s->_consider_peer($_)
                         for grep { $_->{local_interested} }
                         values %{$s->peers};
+                    $s->_trigger_hash_pass($index);
                 }
                 else {
                     $s->_trigger_hash_fail($index);
