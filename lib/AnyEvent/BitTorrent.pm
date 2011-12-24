@@ -114,14 +114,12 @@ sub wanted {
 
 sub complete {
     my $s = shift;
-    return !scalar grep {$_} split '',
-        substr unpack('b*', $s->wanted), 0, $s->piece_count + 1;
+    -1 == index substr(unpack('b*', $s->wanted), 0, $s->piece_count + 1), 1;
 }
 
 sub seed {
     my $s = shift;
-    return scalar grep {$_} split '',
-        substr unpack('b*', ~$s->bitfield), 0, $s->piece_count + 1;
+    -1 == index substr(unpack('b*', $s->bitfield), 0, $s->piece_count + 1), 0;
 }
 
 sub _left {
