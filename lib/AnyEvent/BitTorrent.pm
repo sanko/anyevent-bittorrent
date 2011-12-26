@@ -71,7 +71,11 @@ has reserved => (is         => 'ro',
 );
 
 sub _build_reserved {
-    "\0" x 8;
+    my $reserved = "\0" x 8;
+
+    #vec($reserved, 5, 8)  = 0x10;    # Ext Protocol
+    vec($reserved, 7, 8) = 0x04;    # Fast Ext
+    $reserved;
 }
 has peerid => (
     is  => 'ro',

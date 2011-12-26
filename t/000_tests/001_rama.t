@@ -32,6 +32,7 @@ is $client->infohash, pack('H*', '4005ae91492980463df37ada424966b04ec30c53'),
     'infohash( )';
 is $client->size, 462163, 'size( )';
 is $client->name, "Rama's test creator - IA Test", 'name( )';
+like $client->reserved, qr[^.{8}$], 'reserved( )';    # Weak test
 $client->hashcheck();
 note 'Now, we get to work';
 $cv->recv;
