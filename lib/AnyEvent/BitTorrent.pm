@@ -423,6 +423,10 @@ has peers => (
         #   local_requests    => ArrayRef[ArrayRef] # List of [i, o, l]
         #   timeout           => AnyEvent::timer
         #   keepalive         => AnyEvent::timer
+        #   local_allowed     => ArrayRef
+        #   remote_allowed    => ArrayRef
+        #   local_suggest     => ArrayRef
+        #   remote_suggest    => ArrayRef
         # }
 );
 sub _build_peers { {} }
@@ -445,7 +449,13 @@ sub _add_peer {
             sub {
                 $h->push_write(build_keepalive());
             }
-        )
+        ),
+
+        # BEP06
+        local_allowed  => [],
+        remote_allowed => [],
+        local_suggest  => [],
+        remote_suggest => []
     };
 }
 
@@ -720,7 +730,7 @@ sub _on_read_incoming {
         $h->push_write(build_bitfield($s->bitfield));
         $s->peers->{$h}{timeout}
             = AE::timer(60, 0, sub { $s->_del_peer($h) });
-        $s->peers->{$h}{bitfield} = pack 'b*', "\0" x $s->piece_count;
+        $s->peers->{$h}{bitfield} = pack 'b*', (0 x $s->piece_count);
         $h->on_read(sub { $s->_on_read(@_) });
     }
     else {
@@ -751,7 +761,7 @@ sub _on_read {
             $h->push_write(build_bitfield($s->bitfield));
             $s->peers->{$h}{timeout}
                 = AE::timer(60, 0, sub { $s->_del_peer($h) });
-            $s->peers->{$h}{bitfield} = pack 'b*', "\0" x $s->piece_count;
+            $s->peers->{$h}{bitfield} = pack 'b*', (0 x $s->piece_count);
         }
         elsif ($packet->{type} == $INTERESTED) {
             $s->peers->{$h}{remote_interested} = 1;
@@ -881,8 +891,45 @@ sub _on_read {
 
             # Do nothing... as we don't have a DHT node. Yet?
         }
+        elsif ($packet->{type} == $SUGGEST) {
+            push @{$s->peers->{$h}{local_suggest}}, $packet->{payload};
+        }
+        elsif ($packet->{type} == $HAVE_ALL) {
+            $s->peers->{$h}{bitfield} = pack 'b*', (1 x $s->piece_count);
+            $s->_consider_peer($s->peers->{$h});
+            $s->peers->{$h}{timeout}
+                = AE::timer(120, 0, sub { $s->_del_peer($h) });
+        }
+        elsif ($packet->{type} == $HAVE_NONE) {
+            $s->peers->{$h}{bitfield} = pack 'b*', (0 x $s->piece_count);
+            $s->peers->{$h}{timeout}
+                = AE::timer(30, 0, sub { $s->_del_peer($h) });
+        }
+        elsif ($packet->{type} == $REJECT) {
+            my ($index, $offset, $length) = @{$packet->{payload}};
+            return    # XXX - error callback if this block is not in the queue
+                if !grep {
+                       $_->[0] == $index
+                    && $_->[1] == $offset
+                    && $_->[2] == $length
+                } @{$s->peers->{$h}{local_requests}};
+            $s->working_pieecs->{$index}{$offset}->[3] = ();
+            $s->peers->{$h}{local_requests} = [
+                grep {
+                           ($_->[0] != $index)
+                        || ($_->[1] != $offset)
+                        || ($_->[2] != $length)
+                    } @{$s->peers->{$h}{local_requests}}
+            ];
+            $s->peers->{$h}{timeout}
+                = AE::timer(30, 0, sub { $s->_del_peer($h) });
+        }
+        elsif ($packet->{type} == $ALLOWED_FAST) {
+            push @{$s->peers->{$h}{local_allowed}}, $packet->{payload};
+        }
         else {
-            warn 'Unhandled packet: ' . dd $packet;
+            use Data::Dump qw[pp];
+            die 'Unhandled packet: ' . pp $packet;
         }
         last
             if 5 > length($h->rbuf // '');    # Min size for protocol
@@ -899,6 +946,7 @@ sub _broadcast {
 sub _consider_peer {    # Figure out whether or not we find a peer interesting
     my ($s, $p) = @_;
     return if $s->state ne 'active';
+    return if $s->complete;
     my $relevence = $p->{bitfield} & $s->wanted;
     my $interesting
         = (
