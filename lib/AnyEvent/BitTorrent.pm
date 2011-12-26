@@ -727,7 +727,7 @@ sub _on_read_incoming {
         $s->peers->{$h}{peerid} = $packet->{payload}[2];
         $h->push_write(
                      build_handshake($s->reserved, $s->infohash, $s->peerid));
-        $h->push_write(build_bitfield($s->bitfield));
+        $s->_send_bitfield($h);
         $s->peers->{$h}{timeout}
             = AE::timer(60, 0, sub { $s->_del_peer($h) });
         $s->peers->{$h}{bitfield} = pack 'b*', (0 x $s->piece_count);
@@ -758,7 +758,7 @@ sub _on_read {
             return $s->_del_peer($h)
                 if $packet->{payload}[1] ne $s->infohash;
             $s->peers->{$h}{peerid} = $packet->{payload}[2];
-            $h->push_write(build_bitfield($s->bitfield));
+            $s->_send_bitfield($h);
             $s->peers->{$h}{timeout}
                 = AE::timer(60, 0, sub { $s->_del_peer($h) });
             $s->peers->{$h}{bitfield} = pack 'b*', (0 x $s->piece_count);
@@ -934,6 +934,19 @@ sub _on_read {
         last
             if 5 > length($h->rbuf // '');    # Min size for protocol
     }
+}
+
+sub _send_bitfield {
+    my ($s, $h) = @_;
+    if (vec($s->peers->{$h}{reserved}, 7, 1) & 0x04) {
+        if ($s->seed) { return $h->push_write(build_haveall()) }
+        elsif ($s->bitfield() !~ m[[^\0]]) {
+            return $h->push_write(build_havenone());
+        }
+    }
+
+    # XXX - If it's cheaper to send HAVE packets than a full BITFIELD, do it
+    $h->push_write(build_bitfield($s->bitfield));
 }
 
 sub _broadcast {
