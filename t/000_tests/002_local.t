@@ -4,7 +4,6 @@ use warnings;
 use AnyEvent;
 use lib '../../lib', '../../../net-bittorrent-protocol/lib';
 use AnyEvent::BitTorrent;
-use Net::BitTorrent::Protocol qw[:all];
 use Test::More;
 use File::Temp;
 $|++;
@@ -17,7 +16,7 @@ my $to = AE::timer(90, 0, sub { diag 'Timeout'; $cv->send });
 #
 my $tracker =
     t::800_utils::Tracker::HTTP->new(host     => '127.0.0.1',
-                                     interval => 20,
+                                     interval => 15,
                                      port     => 0
     );
 note 'HTTP tracker @ http://'
@@ -33,8 +32,8 @@ for my $port (@ports) {
         path    => $torrent,
         on_hash_pass => sub {
             pass 'Got piece number ' . pop . ' [' . $port . ']';
-            return if $port != $ports[-1];
-            $client{$port}->stop;
+            return if $port == $ports[0];
+            $client{$_}->stop for @ports;
             $cv->send;
         },
         on_hash_fail => sub {
