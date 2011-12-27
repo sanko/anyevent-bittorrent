@@ -10,21 +10,20 @@ has port => (isa     => 'Int',
              writer  => '_set_port',
              default => 0
 );
-has 'host' =>
+has host =>
     (isa => 'Str', is => 'ro', writer => '_set_host', default => '::');
-has '_peers' => (
+has peers => (
     isa     => 'HashRef[HashRef]',    # By (key ^ info_hash)
     is      => 'ro',
     default => sub { {} },
-    traits  => ['Hash'],
     handles => {
-        forget_peer => 'delete',
-        add_peer    => 'set',
-        peers       => 'values'
 
-            #info_hashes   => ['map', sub { $_->{'info_hash'} } ],
-            #peer_ids      => ['map', sub { $_->{'peer_id'} } ],
-            #find_info_hash => ['map', sub { $_->{'info_hash'} eq $_[0] } ],
+        #forget_peer => 'delete',
+        #add_peer    => 'set',
+        #peers       => 'values'
+        #info_hashes   => ['map', sub { $_->{'info_hash'} } ],
+        #peer_ids      => ['map', sub { $_->{'peer_id'} } ],
+        #find_info_hash => ['map', sub { $_->{'info_hash'} eq $_[0] } ],
     }
 );
 has socket => (isa      => 'Defined',

@@ -49,27 +49,26 @@ sub on_read {
             my $event = $args{'event'} // '';
             $info_hash =~ s[%(..)][chr hex $1]eg;
             $s->complete($s->complete + 1) if $event eq 'complete';
-            $s->add_peer(pack('H*', $args{'key'} // '') ^ $info_hash ^
-                             pack('B*', $args{'peer_id'}),
-                         {address =>
-                              [$args{'ip'} // $ip, $args{'port'} // $port],
-                          downloaded => $args{'downloaded'},
-                          event      => $event,
-                          info_hash  => $info_hash,
-                          key        => $args{'key'} // '',
-                          left       => $args{'left'},
-                          peer_id    => $args{'peer_id'},
-                          tracker_id => $tracker_id,
-                          uploaded   => $args{'uploaded'},
-                          touch      => time
-                         }
-            );
+            my $_id = pack('H*', $args{'key'} // '') ^ $info_hash ^
+                pack('B*', $args{'peer_id'});
+            $s->peers->{$_id} = {
+                address => [$args{'ip'} // $ip, $args{'port'} // $port],
+                downloaded => $args{'downloaded'},
+                event      => $event,
+                info_hash  => $info_hash,
+                key        => $args{'key'} // $_id,
+                left       => $args{'left'},
+                peer_id    => $args{'peer_id'},
+                tracker_id => $tracker_id,
+                uploaded   => $args{'uploaded'},
+                touch      => time
+            };
             $status = '200 Alright';
             my $num_peers = 0;
             my @peers     = grep {
                        $_->{'info_hash'} eq $info_hash
                     && $num_peers++ < $max_peers
-            } $s->peers;
+            } values %{$s->peers};
             $body = {
                 complete       => $s->complete,
                 incomplete     => ((scalar @peers) - $s->complete),
