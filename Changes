@@ -1,4 +1,13 @@
-Version 0.1.3 | In the not too distant future | XXXXXXXXXX
+Version 0.1.4 | Someday | XXXXXXXXXX
+
+    Protocol/Behavioral Changes:
+     * Basic support for BEP 06 (Fast Peers Ext)
+     * File based download priority (...no public API yet)
+
+    Documentation/Sample Code/Test Suite:
+     * Tiny, local HTTP tracker used in tests should work with Mouse
+
+Version 0.1.3 | December 23rd, 2011 around eightish at night | 8930180a08
 
     API Changes/Compatibility Information:
      * New piece_cache( ), seed( ), and complete( ) methods

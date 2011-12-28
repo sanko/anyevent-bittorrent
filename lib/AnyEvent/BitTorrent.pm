@@ -1,5 +1,5 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.1.3' }
+{ $AnyEvent::BitTorrent::VERSION = 'v0.1.4' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -1408,12 +1408,13 @@ subclass it to add more advanced functionality. Hint, hint!
 =head2 What is currently supported?
 
 Basic stuff. We can make and handle piece requests. Deal with cancels,
-disconnect idle peers, unchoke folks. Normal... stuff. HTTP trackers.
+disconnect idle peers, unchoke folks, fast extensions, file download
+priorities. Normal... stuff. HTTP trackers.
 
 =head2 What will probably be supported in the future?
 
-DHT (which will likely be in a separate dist), fast extensions, IPv6 stuff,
-file download priorities... I'll get around to those.
+DHT (which will likely be in a separate dist), IPv6 stuff... I'll get around
+to those.
 
 Long term, UDP trackers may be supported.
 

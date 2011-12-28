@@ -1,2 +1,3 @@
 Everything marked with XXX in /lib/AnyEvent/BitTorrent.pm
 Fast Ext.
+API for file download priority
