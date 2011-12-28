@@ -928,8 +928,9 @@ sub _on_read {
             push @{$s->peers->{$h}{local_allowed}}, $packet->{payload};
         }
         else {
-            use Data::Dump qw[pp];
-            die 'Unhandled packet: ' . pp $packet;
+
+            # use Data::Dump qw[pp];
+            # die 'Unhandled packet: ' . pp $packet;
         }
         last
             if 5 > length($h->rbuf // '');    # Min size for protocol
