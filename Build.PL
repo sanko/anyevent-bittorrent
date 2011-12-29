@@ -28,7 +28,7 @@ my $mb
                     'File::Path'                => 0,
                     'File::Spec'                => 0,
                     'Module::Build'             => 0.38,
-                    'Net::BitTorrent::Protocol' => '0.9.1',
+                    'Net::BitTorrent::Protocol' => '1.0.0',
                     'Scalar::Util'              => 0,
                     perl                        => '5.10.0'
        },

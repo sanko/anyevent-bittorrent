@@ -1,4 +1,9 @@
-Version 0.1.4 | Someday | XXXXXXXXXX
+Version 0.1.5 | Some day very soon | XXXXXXXXXX
+
+    Protocol/Behavioral Changes:
+     * Choke packets from fast peers no longer clear outstanding requests
+
+Version 0.1.4 | Seven something on December 27th, 2011 | 407b3316ef
 
     Protocol/Behavioral Changes:
      * Basic support for BEP 06 (Fast Peers Ext)
