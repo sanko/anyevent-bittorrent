@@ -99,7 +99,7 @@ has peerid => (
                       ->[rand(66)]
                       } 1 .. 7
                  ),
-                 [qw[KaiLi April]]->[rand 2]
+                 [qw[KaiLi April Aaron]]->[rand 3]
              )
             )
         );
