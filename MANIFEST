@@ -12,5 +12,5 @@ t/000_tests/001_rama.t
 t/000_tests/002_local.t
 t/800_utils/Tracker.pm
 t/800_utils/Tracker/HTTP.pm
-'t/900_data/rama\'s test creator - ia test.torrent'
+'t/900_data/Sick of Sarah - 2205 BitTorrent Edition.torrent'
 TODO

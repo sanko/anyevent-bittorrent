@@ -6,14 +6,14 @@ use Net::BitTorrent::Protocol qw[:all];
 use Test::More;
 use File::Temp;
 $|++;
-my $torrent = q[t/900_data/rama's test creator - ia test.torrent];
+my $torrent = q[t/900_data/Sick of Sarah - 2205 BitTorrent Edition.torrent];
 my $basedir = File::Temp::tempdir('AB_XXXX', TMPDIR => 1);
 chdir '../..' if !-f $torrent;
 my $cv = AE::cv;
-my $to = AE::timer(60, 0, sub { diag 'Timeout'; $cv->send });
+my $client;
+my $to = AE::timer(60, 0, sub { diag sprintf 'Timeout!'; $cv->send });
 
 #
-my $client;
 $client = AnyEvent::BitTorrent->new(
     basedir      => $basedir,
     path         => $torrent,
@@ -28,12 +28,12 @@ $client = AnyEvent::BitTorrent->new(
 
 #
 like $client->peerid, qr[^-AB\d{3}[SU]-.{12}$], 'peerid( )';
-is $client->infohash, pack('H*', '4005ae91492980463df37ada424966b04ec30c53'),
+is $client->infohash, pack('H*', 'ecd2f1ffad3c0cc8b20615b137705af655dbb6a9'),
     'infohash( )';
-is $client->size, 462163, 'size( )';
-is $client->name, "Rama's test creator - IA Test", 'name( )';
+is $client->size, 51599856, 'size( )';
+is $client->name, 'Sick of Sarah - 2205 BitTorrent Edition', 'name( )';
 like $client->reserved, qr[^.{8}$], 'reserved( )';    # Weak test
 $client->hashcheck();
 note 'Now, we get to work';
-$cv->recv;
+$cv->recv;    # Pulls one full piece and quits
 done_testing;

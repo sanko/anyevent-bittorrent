@@ -7,7 +7,7 @@ use AnyEvent::BitTorrent;
 use Test::More;
 use File::Temp;
 $|++;
-my $torrent = q[t/900_data/rama's test creator - ia test.torrent];
+my $torrent = q[t/900_data/Sick of Sarah - 2205 BitTorrent Edition.torrent];
 chdir '../..' if !-f $torrent;
 require t::800_utils::Tracker::HTTP;
 my $cv = AE::cv;
