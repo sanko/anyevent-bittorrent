@@ -24,26 +24,27 @@ note 'HTTP tracker @ http://'
     . $tracker->port
     . '/announce.pl';
 my %client;
-my @ports = 1338 .. 1339;
-for my $port (@ports) {
-    $client{$port} = AnyEvent::BitTorrent->new(
-        port    => $port,
-        basedir => File::Temp::tempdir('AB_ ' . $port . '_XXXX', TMPDIR => 1),
+
+for my $peer (1..10) {
+    $client{$peer} = AnyEvent::BitTorrent->new(
+        port    => 0,
+        basedir => File::Temp::tempdir('AB_ ' . $peer . '_XXXX', TMPDIR => 1),
         path    => $torrent,
         on_hash_pass => sub {
-            pass 'Got piece number ' . pop . ' [' . $port . ']';
-            return if $port == $ports[0];
-            $client{$_}->stop for @ports;
+            pass 'Got piece number ' . pop . ' [' . $client{$peer}->peerid . ']';
+            return if $peer <= 3;
+            $_->stop for values %client;
             $cv->send;
         },
         on_hash_fail => sub {
-            note 'FAIL: ' . pop . ' [' . $port . ']';
+            note 'FAIL: ' . pop . ' [' . $client{$peer}->peerid . ']';
         }
     );
-    if ($port != $ports[0]) {
-        $client{$port}->trackers->[0]->{urls} = [];
+    note sprintf 'Opened port %d for %s' , $client{$peer}->port ,$client{$peer}->peerid;
+    if ($peer <= 3) {
+        $client{$peer}->trackers->[0]->{urls} = [];
     }
-    push @{$client{$port}->trackers}, {
+    push @{$client{$peer}->trackers}, {
         urls => [
             'http://' . $tracker->host . ':' . $tracker->port . '/announce.pl'
         ],
@@ -52,10 +53,11 @@ for my $port (@ports) {
         peers      => '',
         ticker     => AE::timer(
             1,
-            15 * 60,
+            rand (15),
             sub {
-                return if $client{$port}->state eq 'stopped';
-                $client{$port}->announce();
+                return if $client{$peer}->state eq 'stopped';
+                $client{$peer}->announce();
+                note 'Announced from ' . $client{$peer}->peerid
             }
         ),
         failures => 0
