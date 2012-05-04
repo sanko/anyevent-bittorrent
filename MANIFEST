@@ -8,7 +8,7 @@ MANIFEST			This list of files
 META.json
 META.yml
 README
-t/000_tests/001_rama.t
+t/000_tests/001_global.t
 t/000_tests/002_local.t
 t/800_utils/Tracker.pm
 t/800_utils/Tracker/HTTP.pm
