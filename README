@@ -194,6 +194,33 @@ Methods
     which is indexed internally. To save this index (for resume, etc.) store
     the values returned by this method and pass it to new( ).
 
+  `trackers( )'
+    Returns a list of hashes, each representing a single tier of trackers as
+    defined by BEP12. The hashes contain the following keys:
+
+    `complete'
+        The is a count of complete peers (seeds) as returned by the most
+        recent announce.
+
+    `failures'
+        This is a running total of the number of failed announces we've had
+        in a row. This value is reset when we have a successful announce.
+
+    `incomplete'
+        The is a count of incomplete peers (leechers) as returned by the
+        most recent announce.
+
+    `peers'
+        Which is a compact collection of IPv4 peers returned by the tracker.
+        See BEP23.
+
+    `peers6'
+        Which is a compact collection of IPv6 peers returned by the tracker.
+        See BEP07.
+
+    `urls'
+        Which is a list of URLs.
+
 This Module is Lame!
     Yeah, I said it.
 

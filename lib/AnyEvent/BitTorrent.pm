@@ -1,5 +1,5 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.1.6' }
+{ $AnyEvent::BitTorrent::VERSION = 'v0.1.7' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -478,7 +478,7 @@ has trackers => (
     init_arg => undef,
     default  => sub {
         my $s = shift;
-        $shuffle ||= sub {
+        $shuffle //= sub {
             my $deck = shift;    # $deck is a reference to an array
             return unless @$deck;    # must not be empty!
             my $i = @$deck;
@@ -493,6 +493,7 @@ has trackers => (
                  complete   => 0,
                  incomplete => 0,
                  peers      => '',
+                 peers6     => '',
                  ticker     => AE::timer(
                      1,
                      15 * 60,
@@ -556,8 +557,16 @@ sub _announce_tier {
             }
             else {                                       # XXX - Callback?
                 $tier->{failures} = $tier->{'failure reason'} = 0;
-                $tier->{peers} = compact_ipv4(
-                            uncompact_ipv4($tier->{peers} . $reply->{peers}));
+                $tier->{peers}
+                    = compact_ipv4(
+                     uncompact_ipv4($tier->{peers} . ($reply->{peers} || '')))
+                    || '';
+                $tier->{peers6} =
+                    compact_ipv6(
+                                uncompact_ipv6(
+                                    $tier->{peers6} . ($reply->{peers6} || '')
+                                )
+                    ) || '';
                 $tier->{complete}   = $reply->{complete};
                 $tier->{incomplete} = $reply->{incomplete};
                 $tier->{ticker} = AE::timer(
@@ -661,8 +670,10 @@ sub _build_peer_timer {
             return if !$s->_left;
 
             # XXX - Initiate connections when we are in Super seed mode?
-            my @cache = uncompact_ipv4(join '',
-                                       map { $_->{peers} } @{$s->trackers});
+            my @cache
+                = uncompact_ipv4(join '',
+                                 map { $_->{peers} } @{$s->trackers}),
+                uncompact_ipv6(join '', map { $_->{peers6} } @{$s->trackers});
             return if !@cache;
             for my $i (1 .. @cache) {
                 last if $i > 10;    # XXX - Max half open
@@ -1396,7 +1407,46 @@ L<stopped|/"stop( )">.
 
 Pieces which overlap files with zero priority are stored in a part file which
 is indexed internally. To save this index (for resume, etc.) store the values
-returned by this method and pass it to L<new( )|/"new( )">.
+returned by this method and pass it to L<new( )|/"new( ... )">.
+
+=head2 C<trackers( )>
+
+Returns a list of hashes, each representing a single tier of trackers as
+defined by L<BEP12|Net::BitTorrent::Protocol::BEP12>. The hashes contain the
+following keys:
+
+=over
+
+=item C<complete>
+
+The is a count of complete peers (seeds) as returned by the most recent
+announce.
+
+=item C<failures>
+
+This is a running total of the number of failed announces we've had in a row.
+This value is reset when we have a successful announce.
+
+=item C<incomplete>
+
+The is a count of incomplete peers (leechers) as returned by the most recent
+announce.
+
+=item C<peers>
+
+Which is a compact collection of IPv4 peers returned by the tracker. See
+L<BEP23|Net::BitTorrent::Protocol::BEP23>.
+
+=item C<peers6>
+
+Which is a compact collection of IPv6 peers returned by the tracker. See
+L<BEP07|Net::BitTorrent::Protocol::BEP07>.
+
+=item C<urls>
+
+Which is a list of URLs.
+
+=back
 
 =head1 This Module is Lame!
 
