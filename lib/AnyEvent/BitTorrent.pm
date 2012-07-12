@@ -559,14 +559,12 @@ sub _announce_tier {
                 $tier->{failures} = $tier->{'failure reason'} = 0;
                 $tier->{peers}
                     = compact_ipv4(
-                     uncompact_ipv4($tier->{peers} . ($reply->{peers} || '')))
-                    || '';
-                $tier->{peers6} =
-                    compact_ipv6(
-                                uncompact_ipv6(
-                                    $tier->{peers6} . ($reply->{peers6} || '')
-                                )
-                    ) || '';
+                             uncompact_ipv4($tier->{peers} . $reply->{peers}))
+                    if $reply->{peers};
+                $tier->{peers6}
+                    = compact_ipv6(
+                           uncompact_ipv6($tier->{peers6} . $reply->{peers6}))
+                    if $reply->{peers6};
                 $tier->{complete}   = $reply->{complete};
                 $tier->{incomplete} = $reply->{incomplete};
                 $tier->{ticker} = AE::timer(
@@ -670,10 +668,12 @@ sub _build_peer_timer {
             return if !$s->_left;
 
             # XXX - Initiate connections when we are in Super seed mode?
-            my @cache
-                = uncompact_ipv4(join '',
-                                 map { $_->{peers} } @{$s->trackers}),
-                uncompact_ipv6(join '', map { $_->{peers6} } @{$s->trackers});
+            my @cache = map {
+                $_->{peers} ? uncompact_ipv4($_->{peers}) : (),
+                    $_->{peers6} ?
+                    uncompact_ipv6($_->{peers6})
+                    : ()
+            } @{$s->trackers};
             return if !@cache;
             for my $i (1 .. @cache) {
                 last if $i > 10;    # XXX - Max half open
