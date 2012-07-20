@@ -11,7 +11,7 @@ my $basedir = File::Temp::tempdir('AB_XXXX', TMPDIR => 1);
 chdir '../..' if !-f $torrent;
 my $cv = AE::cv;
 my $client;
-my $to = AE::timer(90, 0, sub { diag 'Timeout'; $cv->send });
+my $to = AE::timer(90, 0, sub { diag 'Timeout'; ok 'Timeout'; $cv->send });
 
 #
 $client = AnyEvent::BitTorrent->new(

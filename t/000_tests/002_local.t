@@ -11,7 +11,7 @@ my $torrent = q[t/900_data/Sick of Sarah - 2205 BitTorrent Edition.torrent];
 chdir '../..' if !-f $torrent;
 require t::800_utils::Tracker::HTTP;
 my $cv = AE::cv;
-my $to = AE::timer(90, 0, sub { diag 'Timeout'; $cv->send });
+my $to = AE::timer(90, 0, sub { diag 'Timeout'; ok 'Timeout'; $cv->send });
 
 #
 my $tracker =
