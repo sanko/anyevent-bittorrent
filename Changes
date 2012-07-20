@@ -1,10 +1,18 @@
-Version 0.1.7 | Early morning, July 12th, 2012 | xxxxxxxxxx
+Version 0.1.8 | Yet another day | xxxxxxxxxx
+
+    API Changes/Compatibility Information:
+     * Fix stupid dev code that prevented subclasses of AB from working
+
+Version 0.1.7 | Early morning, July 12th, 2012 | fc6b65c48b
 
     Protocol/Behavioral Changes:
      * Small steps forward on IPv6 support
 
     Documentation/Sample Code/Test Suite:
      * Document $client->trackers( )
+
+    Notes:
+     * London, baby!
 
 Version 0.1.6 | Late evening on May 4th, 2012 | c32e8a7519
 

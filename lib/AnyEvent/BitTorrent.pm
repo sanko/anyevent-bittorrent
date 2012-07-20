@@ -163,7 +163,8 @@ has metadata => (is         => 'ro',
 
 sub _build_metadata {
     my $s = shift;
-    return if ref $s ne __PACKAGE__;    # Applying roles makes deep rec
+
+    #return if ref $s ne __PACKAGE__;    # Applying roles makes deep rec
     open my $fh, '<', $s->path;
     sysread $fh, my $raw, -s $fh;
     my $metadata = bdecode $raw;
