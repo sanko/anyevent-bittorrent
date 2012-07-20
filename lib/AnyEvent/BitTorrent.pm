@@ -1190,6 +1190,16 @@ of this version:
 
 =head2 C<new( ... )>
 
+    my $c = AnyEvent::BitTorrent->(
+        path         => 'some/legal.torrent',
+        basedir      => './storage/',
+        port         => 6881,
+        on_hash_pass => sub { ... },
+        on_hash_fail => sub { ... },
+        state        => 'stopped',
+        piece_cache  => $quick_restore
+    );
+
 This constructor understands the following arguments:
 
 =over
@@ -1251,7 +1261,7 @@ call L<C<start( )>|/"start( )">.
 
 =item C<piece_cache>
 
-This is the index returned by L<C<piece_cache( )>|/"piece_cache( )"> in a
+This is the index list returned by L<C<piece_cache( )>|/"piece_cache( )"> in a
 previous instance. Using this should make a complete resume system a trivial
 task.
 
