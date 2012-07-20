@@ -1,5 +1,5 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.1.8-alpha-1' }
+{ $AnyEvent::BitTorrent::VERSION = 'v0.1.8' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;

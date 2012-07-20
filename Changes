@@ -1,4 +1,4 @@
-Version 0.1.8 | Yet another day | xxxxxxxxxx
+Version 0.1.8 | After supper on July 20th, 2012 | xxxxxxxxxx
 
     API Changes/Compatibility Information:
      * Fix stupid dev code that prevented subclasses of AB from working
