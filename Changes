@@ -1,4 +1,13 @@
-Version 0.1.8 | After supper on July 20th, 2012 | xxxxxxxxxx
+Version 0.1.9 | Soon | xxxxxxxxxx
+
+    Protocol/Behavioral Changes:
+     * Open filehandles timeout:
+       - 500s when opened for read
+       - 500s delay after every read
+       - 60s when opened for write
+       - 120s delay after every write
+
+Version 0.1.8 | After supper on July 20th, 2012 | f35ec1c774
 
     API Changes/Compatibility Information:
      * Fix stupid dev code that prevented subclasses of AB from working

@@ -1,5 +1,5 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.1.8' }
+{ $AnyEvent::BitTorrent::VERSION = 'v0.1.9' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -11,11 +11,9 @@ use Digest::SHA qw[sha1];
 use File::Spec;
 use File::Path;
 use Net::BitTorrent::Protocol qw[:all];
-
 #
 # XXX - These should be ro attributes w/o init args:
 my $block_size = 2**14;
-
 #
 has port => (is      => 'ro',
              isa     => 'Int',
@@ -97,7 +95,7 @@ has peerid => (
                   map {
                       ['A' .. 'Z', 'a' .. 'z', 0 .. 9, qw[- . _ ~]]
                       ->[rand(66)]
-                      } 1 .. 7
+                  } 1 .. 7
                  ),
                  [qw[KaiLi April Aaron]]->[rand 3]
              )
@@ -207,18 +205,20 @@ sub _build_files {
              fh       => undef,
              mode     => 'c',
              length   => $_->{length},
+             timeout  => undef,
              path =>
                  File::Spec->rel2abs(
                      File::Spec->catfile($s->basedir, $s->name, @{$_->{path}})
                  )
             }
-            } @{$s->metadata->{info}{files}}
+        } @{$s->metadata->{info}{files}}
         ]
         : [
           {priority => 1,
            fh       => undef,
            mode     => 'c',
            length   => $s->metadata->{info}{length},
+           timeout  => undef,
            path =>
                File::Spec->rel2abs(File::Spec->catfile($s->basedir, $s->name))
           }
@@ -244,6 +244,10 @@ sub _open {
         sysopen($s->files->[$i]->{fh}, $s->files->[$i]->{path}, O_RDONLY)
             || return;
         flock($s->files->[$i]->{fh}, LOCK_SH) || return;
+        weaken $s;
+        my $x = $i;
+        $s->files->[$x]->{timeout}
+            = AE::timer(500, 0, sub { $s // return; $s->_open($x, 'c') });
     }
     elsif ($m eq 'w') {
         my @split = File::Spec->splitdir($s->files->[$i]->{path});
@@ -257,9 +261,13 @@ sub _open {
         flock $s->files->[$i]->{fh}, LOCK_EX;
         truncate $s->files->[$i]->{fh}, $s->files->[$i]->{length}
             if -s $s->files->[$i]->{fh}
-                != $s->files->[$i]->{length};    # XXX - pre-allocate files
+            != $s->files->[$i]->{length};    # XXX - pre-allocate files
+        weaken $s;
+        my $x = $i;
+        $s->files->[$x]->{timeout}
+            = AE::timer(60, 0, sub { $s // return; $s->_open($x, 'c') });
     }
-    elsif ($m eq 'c') { }
+    elsif ($m eq 'c') { $s->files->[$i]->{timeout} = () }
     else              {return}
     return $s->files->[$i]->{mode} = $m;
 }
@@ -340,6 +348,10 @@ READ: while ((defined $length) && ($length > 0)) {
             sysseek $s->files->[$file_index]->{fh}, $total_offset, SEEK_SET;
             sysread $s->files->[$file_index]->{fh}, my ($_data), $this_read;
             $data .= $_data if $_data;
+            weaken $s;
+            my $x = $file_index;
+            $s->files->[$x]->{timeout}
+                = AE::timer(500, 0, sub { $s // return; $s->_open($x, 'c') });
         }
         $file_index++;
         $length -= $this_read;
@@ -376,6 +388,10 @@ WRITE: while ((defined $data) && (length $data > 0)) {
             sysseek $s->files->[$file_index]->{fh}, $total_offset, SEEK_SET;
             my $w = syswrite $s->files->[$file_index]->{fh}, substr $data, 0,
                 $this_write, '';
+            weaken $s;
+            my $x = $file_index;
+            $s->files->[$x]->{timeout}
+                = AE::timer(120, 0, sub { $s // return; $s->_open($x, 'c') });
         }
         $file_index++;
         last WRITE if not defined $s->files->[$file_index];
@@ -457,7 +473,6 @@ sub _add_peer {
         remote_allowed => [],
         local_suggest  => [],
         remote_suggest => [],
-
         #
         encryption => '?'
     };
@@ -736,6 +751,7 @@ sub _on_read_incoming {
     }
     elsif ($packet->{type} == $HANDSHAKE) {
         ref $packet->{payload} // return;
+        return if !ref $packet->{payload} eq 'ARRAY';
         $s->peers->{$h}{reserved} = $packet->{payload}[0];
         return $s->_del_peer($h)
             if $packet->{payload}[1] ne $s->infohash;
@@ -839,7 +855,7 @@ sub _on_read {
                            ($_->[0] != $index)
                         || ($_->[1] != $offset)
                         || ($_->[2] != length($data))
-                    } @{$s->peers->{$h}{local_requests}}
+                } @{$s->peers->{$h}{local_requests}}
             ];
             $s->working_pieces->{$index}{$offset}[4] = $data;
             $s->working_pieces->{$index}{$offset}[5] = ();
@@ -897,7 +913,7 @@ sub _on_read {
                            ($_->[0] != $index)
                         || ($_->[1] != $offset)
                         || ($_->[2] != $length)
-                    } @{$s->peers->{$h}{remote_requests}}
+                } @{$s->peers->{$h}{remote_requests}}
             ];
         }
         elsif ($packet->{type} == $PORT) {
@@ -932,7 +948,7 @@ sub _on_read {
                            ($_->[0] != $index)
                         || ($_->[1] != $offset)
                         || ($_->[2] != $length)
-                    } @{$s->peers->{$h}{local_requests}}
+                } @{$s->peers->{$h}{local_requests}}
             ];
             $s->peers->{$h}{timeout}
                 = AE::timer(30, 0, sub { $s->_del_peer($h) });
@@ -941,7 +957,6 @@ sub _on_read {
             push @{$s->peers->{$h}{local_allowed}}, $packet->{payload};
         }
         else {
-
             # use Data::Dump qw[pp];
             # die 'Unhandled packet: ' . pp $packet;
         }
@@ -1066,7 +1081,7 @@ sub _request_pieces {
         #warn sprintf 'Requesting %d, %d, %d', $index, $offset, $_block_size;
         $s->_send_encrypted($p->{handle},
                             build_request($index, $offset, $_block_size))
-            ;                 # XXX - len for last piece
+            ;    # XXX - len for last piece
         $s->working_pieces->{$index}{$offset} = [
             $index, $offset,
             $_block_size,
@@ -1084,7 +1099,7 @@ sub _request_pieces {
                                    $_->[0] != $index
                                 || $_->[1] != $offset
                                 || $_->[2] != $_block_size
-                            } @{$p->{local_requests}}
+                        } @{$p->{local_requests}}
                     ];
                     $p->{timeout} = AE::timer(45, 0,
                                          sub { $s->_del_peer($p->{handle}) });
@@ -1117,7 +1132,6 @@ has on_hash_fail => (
     clearer => '_no_hash_fail'
 );
 sub _trigger_hash_fail { shift->on_hash_fail()->(@_) }
-
 #
 has state => (is      => 'ro',
               isa     => enum([qw[active stopped paused]]),
@@ -1149,7 +1163,6 @@ sub pause {
     $s->_peer_timer;
     $s->_set_state('paused');
 }
-
 #
 sub BUILD {
     my ($s, $a) = @_;
@@ -1160,8 +1173,8 @@ sub BUILD {
 # Testing stuff goes here
 sub _send_encrypted {
     my ($s, $h, $packet) = @_;
-
-    # XXX - Currently doesn't do anything and may never do anything
+    return if !$h;    # XXX - $s->_del_peer($p->{handle})
+         # XXX - Currently doesn't do anything and may never do anything
     return $h->push_write($packet);
 }
 
@@ -1186,9 +1199,9 @@ AnyEvent::BitTorrent - Yet Another BitTorrent Client Module
 
 =head1 Synopsis
 
-    use AnyEvent::BitTorrent;
-    my $client = AnyEvent::BitTorrent->new( path => 'some.torrent' );
-    AE::cv->recv;
+	use AnyEvent::BitTorrent;
+	my $client = AnyEvent::BitTorrent->new( path => 'some.torrent' );
+	AE::cv->recv;
 
 =head1 Description
 
@@ -1207,15 +1220,15 @@ of this version:
 
 =head2 C<new( ... )>
 
-    my $c = AnyEvent::BitTorrent->(
-        path         => 'some/legal.torrent',
-        basedir      => './storage/',
-        port         => 6881,
-        on_hash_pass => sub { ... },
-        on_hash_fail => sub { ... },
-        state        => 'stopped',
-        piece_cache  => $quick_restore
-    );
+	my $c = AnyEvent::BitTorrent->(
+		path         => 'some/legal.torrent',
+		basedir      => './storage/',
+		port         => 6881,
+		on_hash_pass => sub { ... },
+		on_hash_fail => sub { ... },
+		state        => 'stopped',
+		piece_cache  => $quick_restore
+	);
 
 This constructor understands the following arguments:
 
@@ -1293,15 +1306,15 @@ This method expects...
 =item ...a list of integers. You could use this to check a range of pieces (a
 single file, for example).
 
-    $client->hashcheck( 1 .. 5, 34 .. 56 );
+	$client->hashcheck( 1 .. 5, 34 .. 56 );
 
 =item ...a single integer. Only that specific piece is checked.
 
-    $client->hashcheck( 17 );
+	$client->hashcheck( 17 );
 
 =item ...nothing. All data related to this torrent will be checked.
 
-    $client->hashcheck( );
+	$client->hashcheck( );
 
 =back
 
@@ -1543,8 +1556,8 @@ Major version, two digits for the minor version, and a single character to
 indicate stability (stable releases marked with C<S>, unstable releases marked
 with C<U>). It looks sorta like:
 
-    -AB110S-  Stable v1.10.0 relese (typically found on CPAN, tagged in repo)
-    -AB110U-  Unstable v1.10.X release (private builds, early testing, etc.)
+	-AB110S-  Stable v1.10.0 relese (typically found on CPAN, tagged in repo)
+	-AB110U-  Unstable v1.10.X release (private builds, early testing, etc.)
 
 =head1 Bug Reports
 
