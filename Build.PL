@@ -30,10 +30,10 @@ my $mb
                     'Module::Build'             => 0.38,
                     'Net::BitTorrent::Protocol' => '1.0.0',
                     'Scalar::Util'              => 0,
-                    perl                        => '5.10.0'
+                    perl                        => '5.16.0'
        },
        build_requires => {'Module::Build' => 0.38,
-                          perl            => '5.10.0',
+                          perl            => '5.16.0',
                           'Test::More'    => 0,
                           'File::Temp'    => 0
        },
