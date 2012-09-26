@@ -1221,7 +1221,7 @@ of this version:
 
 =head2 C<new( ... )>
 
-	my $c = AnyEvent::BitTorrent->(
+	my $c = AnyEvent::BitTorrent->new(
 		path         => 'some/legal.torrent',
 		basedir      => './storage/',
 		port         => 6881,
