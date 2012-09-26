@@ -11,6 +11,7 @@ use Digest::SHA qw[sha1];
 use File::Spec;
 use File::Path;
 use Net::BitTorrent::Protocol qw[:all];
+use Scalar::Util qw[/weak/];
 #
 # XXX - These should be ro attributes w/o init args:
 my $block_size = 2**14;
@@ -261,7 +262,7 @@ sub _open {
         sysopen($s->files->[$i]->{fh}, $s->files->[$i]->{path}, O_RDONLY)
             || return;
         flock($s->files->[$i]->{fh}, LOCK_SH) || return;
-        weaken $s;
+        weaken $s unless isweak $s;
         my $x = $i;
         $s->files->[$x]->{timeout}
             = AE::timer(500, 0, sub { $s // return; $s->_open($x, 'c') });
@@ -280,7 +281,7 @@ sub _open {
         truncate $s->files->[$i]->{fh}, $s->files->[$i]->{length}
             if -s $s->files->[$i]->{fh}
             != $s->files->[$i]->{length};    # XXX - pre-allocate files
-        weaken $s;
+        weaken $s unless isweak $s;
         my $x = $i;
         $s->files->[$x]->{timeout}
             = AE::timer(60, 0, sub { $s // return; $s->_open($x, 'c') });
@@ -389,7 +390,7 @@ READ: while ((defined $length) && ($length > 0)) {
                 trace =>
                 'Read %d bytes of data from file (%d bytes collected so far)',
                 length $_data, length $data;
-            weaken $s;
+            weaken $s unless isweak $s;
             my $x = $file_index;
             $s->files->[$x]->{timeout}
                 = AE::timer(500, 0, sub { $s // return; $s->_open($x, 'c') });
@@ -453,7 +454,7 @@ WRITE: while ((defined $data) && (length $data > 0)) {
             AE::log
                 trace => 'Wrote %d bytes of data to file (%d bytes left)',
                 $w, length $data;
-            weaken $s;
+            weaken $s unless isweak $s;
             my $x = $file_index;
             $s->files->[$x]->{timeout}
                 = AE::timer(120, 0, sub { $s // return; $s->_open($x, 'c') });
@@ -1151,13 +1152,11 @@ sub _file_to_range {
 sub _request_pieces {
     my ($s, $p) = @_;
     return if $s->state ne 'active';
-    use Scalar::Util qw[weaken];
-    weaken $p;
+    weaken $p unless isweak $p;
     $p // return;
     $p->{handle} // return;
     my @indexes;
     if (scalar keys %{$s->working_pieces} < 10) {   # XXX - Max working pieces
-
         for my $findex (0 .. $#{$s->files}) {
             for my $index ($s->_file_to_range($findex)) {
                 push @indexes, map {
@@ -1230,7 +1229,8 @@ sub _request_pieces {
                 }
             )
         ];
-        weaken($s->working_pieces->{$index}{$offset}[3]);
+        weaken($s->working_pieces->{$index}{$offset}[3])
+            unless isweak($s->working_pieces->{$index}{$offset}[3]);
         push @{$p->{local_requests}}, [$index, $offset, $_block_size];
     }
 }
