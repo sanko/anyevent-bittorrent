@@ -21,7 +21,7 @@ Methods
     interface as of this version:
 
   "new( ... )"
-            my $c = AnyEvent::BitTorrent->(
+            my $c = AnyEvent::BitTorrent->new(
                     path         => 'some/legal.torrent',
                     basedir      => './storage/',
                     port         => 6881,
@@ -127,9 +127,6 @@ Methods
 
   "size( )"
     Returns the total size of all files described in the torrent's metadata.
-
-    Note that this value is recalculated every time you call this method. If
-    you need it more than occasionally, it may be best to cache it yourself.
 
   "name( )"
     Returns the UTF-8 encoded string the metadata suggests we save the file
