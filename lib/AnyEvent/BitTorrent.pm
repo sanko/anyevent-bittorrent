@@ -500,30 +500,11 @@ sub hashcheck (;@) {
             : $s->_trigger_hash_fail($index);
     }
 }
-has peers => (
-    is      => 'ro',
-    isa     => 'HashRef',
-    lazy    => 1,
-    clearer => '_clear_peers',
-    builder => '_build_peers'
-
-        # { handle            => AnyEvent::Handle
-        #   peerid            => 'Str'
-        #   reserved          => 'Str'
-        #   bitfield          => 'Str'
-        #   remote_choked     => 1
-        #   remote_interested => 0
-        #   remote_requests   => ArrayRef[ArrayRef] # List of [i, o, l]
-        #   local_choked      => 1
-        #   local_interested  => 0
-        #   local_requests    => ArrayRef[ArrayRef] # List of [i, o, l]
-        #   timeout           => AnyEvent::timer
-        #   keepalive         => AnyEvent::timer
-        #   local_allowed     => ArrayRef
-        #   remote_allowed    => ArrayRef
-        #   local_suggest     => ArrayRef
-        #   remote_suggest    => ArrayRef
-        # }
+has peers => (is      => 'ro',
+              isa     => 'HashRef',
+              lazy    => 1,
+              clearer => '_clear_peers',
+              builder => '_build_peers'
 );
 sub _build_peers { {} }
 
@@ -592,6 +573,7 @@ has trackers => (
                  incomplete => 0,
                  peers      => '',
                  peers6     => '',
+                 announcer  => undef,
                  ticker     => AE::timer(
                      1,
                      15 * 60,
@@ -627,7 +609,7 @@ sub announce {
     my ($s, $e) = @_;
     return if $a++ > 10;    # Retry attempts
     for my $tier (@{$s->trackers}) {
-        $s->_announce_tier($e, $tier);
+        $tier->{announcer} //= $s->_announce_tier($e, $tier);
     }
 }
 
