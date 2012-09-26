@@ -224,8 +224,9 @@ sub _build_files {
           }
         ];
 }
+has size => (is => 'ro', isa => 'Int', lazy_build => 1, init_arg => undef);
 
-sub size {
+sub _build_size {
     my $s   = shift;
     my $ret = 0;
     $ret += $_->{length} for @{$s->files};
@@ -1356,9 +1357,6 @@ Returns the port number the client is listening on.
 
 Returns the total size of all L<files|/"files( )"> described in the torrent's
 metadata.
-
-Note that this value is recalculated every time you call this method. If you
-need it more than occasionally, it may be best to cache it yourself.
 
 =head2 C<name( )>
 
