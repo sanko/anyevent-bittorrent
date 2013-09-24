@@ -16,7 +16,6 @@ my $mb
        license     => 'artistic_2',
        dist_author => 'Sanko Robinson <sanko@cpan.org>',
        requires    => {
-                    'Any::Moose'                => 0,
                     'AnyEvent'                  => 0,
                     'AnyEvent::HTTP'            => 0,
                     'AnyEvent::Handle'          => 0,
@@ -28,8 +27,10 @@ my $mb
                     'File::Path'                => 0,
                     'File::Spec'                => 0,
                     'Module::Build'             => 0.38,
+                    'Moo'                       => 0,
                     'Net::BitTorrent::Protocol' => '1.0.0',
                     'Scalar::Util'              => 0,
+                    'Type::Tiny'                => 0,
                     perl                        => '5.16.0'
        },
        build_requires => {'Module::Build' => 0.38,
@@ -69,7 +70,7 @@ sub find_cb {
     return push @tests, $File::Find::name;
 }
 __END__
-Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2008-2013 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of The Artistic License 2.0.  See the LICENSE file

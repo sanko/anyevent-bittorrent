@@ -1,11 +1,12 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.2.0' }
+{ $AnyEvent::BitTorrent::VERSION = 'v0.2.1' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
 use AnyEvent::HTTP;
-use Any::Moose;
-use Any::Moose '::Util::TypeConstraints';
+use Moo;
+use Type::Tiny;
+use Types::Standard qw[ArrayRef CodeRef Enum HashRef Int Ref Str];
 use Fcntl qw[/SEEK_/ /O_/ :flock];
 use Digest::SHA qw[sha1];
 use File::Spec;
@@ -15,14 +16,42 @@ use Scalar::Util qw[/weak/];
 #
 # XXX - These should be ro attributes w/o init args:
 my $block_size = 2**14;
+
+# Custom types
+my $FILE = Type::Tiny->new(name       => 'File',
+                           parent     => Str,
+                           constraint => sub { -f $_ },
+                           message    => sub {"$_ isn't an existing file"},
+);
+my $RESERVED = Type::Tiny->new(name       => 'Reserved',
+                               parent     => Str,
+                               constraint => sub { length $_ == 8 },
+                               message => sub {'reserved data is malformed'}
+);
+my $PEERID = Type::Tiny->new(
+    name       => 'PeerID',
+    parent     => Str,
+    constraint => sub { length $_ == 20 },
+    message    => sub {
+        'Peer ID must be 20 chars in length';
+    }
+);
+my $INFOHASH = Type::Tiny->new(
+    name       => 'Infohash',
+    parent     => Str,
+    constraint => sub { length $_ == 20 },
+    message    => sub {
+        'Infohashes are 20 bytes in length';
+    }
+);
 #
 has port => (is      => 'ro',
-             isa     => 'Int',
-             default => 0,
+             isa     => Int,
+             default => sub {0},
              writer  => '_set_port'
 );
 has socket => (is        => 'ro',
-               isa       => 'Ref',
+               isa       => Ref,
                init_arg  => undef,
                required  => 1,
                predicate => '_has_socket',
@@ -61,17 +90,12 @@ sub _build_socket {
         AE::log info => "bound to $thishost, port $thisport";
         };
 }
-has path => (
-            is  => 'ro',
-            isa => subtype(
-                as 'Str' => where { -f $_ } => message { 'Cannot find ' . $_ }
-            ),
-            required => 1
+has path => (is       => 'ro',
+             isa      => $FILE,
+             required => 1
 );
-has reserved => (is         => 'ro',
-                 isa        => subtype(as 'Str' => where { length $_ == 8 }),
-                 lazy_build => 1
-);
+has reserved => (is  => 'lazy',
+                 isa => $RESERVED);
 
 sub _build_reserved {
     my $reserved = "\0" x 8;
@@ -82,12 +106,8 @@ sub _build_reserved {
     $reserved;
 }
 has peerid => (
-    is  => 'ro',
-    isa => subtype(
-        as 'Str' => where { length $_ == 20 } => message {
-            'Peer ID must be 20 chars in length';
-        }
-    ),
+    is       => 'ro',
+    isa      => $PEERID,
     init_arg => undef,
     required => 1,
     default  => sub {
@@ -109,10 +129,9 @@ has peerid => (
         );
     }
 );
-has bitfield => (is         => 'ro',
-                 isa        => 'Str',
-                 init_arg   => undef,
-                 lazy_build => 1
+has bitfield => (is       => 'lazy',
+                 isa      => Str,
+                 init_arg => undef,
 );
 sub _build_bitfield { pack 'b*', "\0" x shift->piece_count }
 
@@ -145,25 +164,18 @@ sub _left {
         substr unpack('b*', $s->wanted), 0, $s->piece_count + 1;
 }
 has $_ => (is      => 'ro',
-           isa     => 'Num',
-           default => 0,
+           isa     => Int,
+           default => sub {0},
            writer  => '_set_' . $_
 ) for qw[uploaded downloaded];
-has infohash => (
-    is  => 'ro',
-    isa => subtype(
-        as 'Str' => where { length $_ == 20 } => message {
-            'Infohashes are 20 bytes in length';
-        }
-    ),
-    init_arg => undef,
-    lazy     => 1,
-    default  => sub { sha1(bencode(shift->metadata->{info})) }
+has infohash => (is       => 'lazy',
+                 isa      => $INFOHASH,
+                 init_arg => undef,
+                 default  => sub { sha1(bencode(shift->metadata->{info})) }
 );
-has metadata => (is         => 'ro',
-                 isa        => 'HashRef',
-                 init_arg   => undef,
-                 lazy_build => 1
+has metadata => (is       => 'lazy',
+                 isa      => HashRef,
+                 init_arg => undef
 );
 
 sub _build_metadata {
@@ -189,10 +201,9 @@ sub piece_count {
     int($count) + (($count == int $count) ? 1 : 0);
 }
 has basedir => (
-    is       => 'ro',
-    isa      => 'Str',
+    is       => 'lazy',
+    isa      => Str,
     required => 1,
-    lazy     => 1,
     default  => sub { File::Spec->rel2abs(File::Spec->curdir) },
     trigger  => sub {
         my ($s, $n, $o) = @_;
@@ -200,11 +211,10 @@ has basedir => (
         $s->_clear_files;    # So they can be rebuilt with the new basedir
     }
 );
-has files => (is         => 'ro',
-              isa        => 'ArrayRef[HashRef]',
-              lazy_build => 1,
-              init_arg   => undef,
-              clearer    => '_clear_files'
+has files => (is       => 'lazy',
+              isa      => ArrayRef [HashRef],
+              init_arg => undef,
+              clearer  => '_clear_files'
 );
 
 sub _build_files {
@@ -235,7 +245,7 @@ sub _build_files {
           }
         ];
 }
-has size => (is => 'ro', isa => 'Int', lazy_build => 1, init_arg => undef);
+has size => (is => 'lazy', isa => Int, init_arg => undef);
 
 sub _build_size {
     my $s   = shift;
@@ -290,7 +300,7 @@ sub _open {
     else              {return}
     return $s->files->[$i]->{mode} = $m;
 }
-has piece_cache => (is => 'ro', isa => 'HashRef', default => sub { {} });
+has piece_cache => (is => 'ro', isa => HashRef, default => sub { {} });
 
 sub _cache_path {
     my $s = shift;
@@ -500,9 +510,8 @@ sub hashcheck (;@) {
             : $s->_trigger_hash_fail($index);
     }
 }
-has peers => (is      => 'ro',
-              isa     => 'HashRef',
-              lazy    => 1,
+has peers => (is      => 'lazy',
+              isa     => HashRef,
               clearer => '_clear_peers',
               builder => '_build_peers'
 );
@@ -550,9 +559,8 @@ sub _del_peer {
 }
 my $shuffle;
 has trackers => (
-    is       => 'ro',
-    isa      => 'ArrayRef[HashRef]',
-    lazy     => 1,
+    is       => 'lazy',
+    isa      => ArrayRef [HashRef],
     required => 1,
     init_arg => undef,
     default  => sub {
@@ -683,7 +691,7 @@ sub _announce_tier {
 }
 has _choke_timer => (
     is       => 'bare',
-    isa      => 'Ref',
+    isa      => Ref,
     init_arg => undef,
     required => 1,
     default  => sub {
@@ -711,7 +719,7 @@ has _choke_timer => (
 );
 has _fill_requests_timer => (
     is       => 'bare',
-    isa      => 'Ref',
+    isa      => Ref,
     init_arg => undef,
     required => 1,
     default  => sub {
@@ -757,10 +765,9 @@ has _fill_requests_timer => (
         );
     }
 );
-has _peer_timer => (is       => 'ro',
-                    isa      => 'Ref',
+has _peer_timer => (is       => 'lazy',
+                    isa      => Ref,
                     init_arg => undef,
-                    lazy     => 1,
                     clearer  => '_clear_peer_timer',
                     builder  => '_build_peer_timer'
 );
@@ -1112,9 +1119,8 @@ sub _consider_peer {    # Figure out whether or not we find a peer interesting
         }
     }
 }
-has working_pieces => (is       => 'ro',
-                       isa      => 'HashRef',
-                       lazy     => 1,
+has working_pieces => (is       => 'lazy',
+                       isa      => HashRef,
                        init_arg => undef,
                        default  => sub { {} }
 );
@@ -1219,8 +1225,8 @@ sub _request_pieces {
 
 # Cheap callback system
 has on_hash_pass => (
-    isa     => 'CodeRef',
     is      => 'rw',
+    isa     => CodeRef,
     default => sub {
         sub { !!1 }
     },
@@ -1228,8 +1234,8 @@ has on_hash_pass => (
 );
 sub _trigger_hash_pass { shift->on_hash_pass()->(@_) }
 has on_hash_fail => (
-    isa     => 'CodeRef',
     is      => 'rw',
+    isa     => CodeRef,
     default => sub {
         sub { !!1 }
     },
@@ -1238,9 +1244,9 @@ has on_hash_fail => (
 sub _trigger_hash_fail { shift->on_hash_fail()->(@_) }
 #
 has state => (is      => 'ro',
-              isa     => enum([qw[active stopped paused]]),
+              isa     => Enum [qw[active stopped paused]],
               writer  => '_set_state',
-              default => 'active'
+              default => sub {'active'}
 );
 
 sub stop {
@@ -1702,7 +1708,7 @@ CPAN ID: SANKO
 
 =head1 License and Legal
 
-Copyright (C) 2011-2012 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2011-2013 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of
