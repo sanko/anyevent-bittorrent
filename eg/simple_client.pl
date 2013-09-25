@@ -1,4 +1,5 @@
 #!perl
+use lib '../lib';
 use AnyEvent::BitTorrent;
 use Net::BitTorrent::Protocol qw[:all];
 $|++;

@@ -1,5 +1,5 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.2.1' }
+{ $AnyEvent::BitTorrent::VERSION = 'v0.2.2' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -1314,11 +1314,6 @@ sub _send_handshake {
     # XXX - Send encrypted handshake if encryption status is unknown or true
     $h->push_write(build_handshake($s->reserved, $s->infohash, $s->peerid));
 }
-
-# Wrap everything up
-__PACKAGE__->meta->make_immutable();
-no Any::Moose;
-no Any::Moose '::Util::TypeConstraints';
 1;
 
 =pod
@@ -1623,8 +1618,8 @@ Yeah, I said it.
 There are a few things a BitTorrent client must implement (to some degree) in
 order to interact with other clients in a modern day swarm.
 L<AnyEvent::BitTorrent|AnyEvent::BitTorrent> is meant to meet that bare
-minimum but it's based on L<Moose|Moose> or L<Mouse|Mouse> so you could always
-subclass it to add more advanced functionality. Hint, hint!
+minimum but it's based on L<Moo|Moo> so you could always subclass it to add more
+advanced functionality. Hint, hint!
 
 =head2 What is currently supported?
 

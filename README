@@ -17,10 +17,10 @@ Methods
     The API, much like the module itself, is simple.
 
     Anything you find by skimming the source is likely not ready for public
-    use and will be subject to change before "v1.0.0". Here's the public
+    use and will be subject to change before `v1.0.0'. Here's the public
     interface as of this version:
 
-  "new( ... )"
+  `new( ... )'
             my $c = AnyEvent::BitTorrent->new(
                     path         => 'some/legal.torrent',
                     basedir      => './storage/',
@@ -33,57 +33,57 @@ Methods
 
     This constructor understands the following arguments:
 
-    "path"
+    `path'
         This is the only required parameter. It's the path to a valid
         .torrent file.
 
-    "basedir"
+    `basedir'
         This is the base directory all data will be stored in and/or read
         from. Multifile torrents will create another directory below this to
         store all files.
 
-        By default, this is the current working directory when "new( ... )"
+        By default, this is the current working directory when `new( ... )'
         is called.
 
-    "port"
+    `port'
         This is the preferred port local host binds and expects incoming
         peers to connect to.
 
         By default, this is a zero; the system will pick a port number
         randomly.
 
-    "on_hash_fail"
+    `on_hash_fail'
         This is a subroutine called whenever a piece fails to pass
         hashcheck. The callback is handed the piece's index.
 
-    "on_hash_pass"
+    `on_hash_pass'
         This is a subroutine called whenever a piece passes its hashcheck.
         The callback is handed the piece's index.
 
-    "state"
+    `state'
         This must be one of the following:
 
-        "started"
+        `started'
             This is the default. The client will attempt to create new
             connections, make and fill requests, etc. This is normal client
             behavior.
 
-        "paused"
+        `paused'
             In this state, connections will be made and accepted but no
             piece requests will be made or filled. To resume full, normal
-            behavior, you must call "start( )".
+            behavior, you must call `start( )'.
 
-        "stopped"
+        `stopped'
             Everything is put on hold. No new outgoing connections are
             attempted and incoming connections are rejected. To resume full,
-            normal behavior, you must call "start( )".
+            normal behavior, you must call `start( )'.
 
-    "piece_cache"
-        This is the index list returned by "piece_cache( )" in a previous
+    `piece_cache'
+        This is the index list returned by `piece_cache( )' in a previous
         instance. Using this should make a complete resume system a trivial
         task.
 
-  "hashcheck( [...] )"
+  `hashcheck( [...] )'
     This method expects...
 
     ...a list of integers. You could use this to check a range of pieces (a
@@ -96,135 +96,136 @@ Methods
     ...nothing. All data related to this torrent will be checked.
                 $client->hashcheck( );
 
-    As pieces pass or fail, your "on_hash_pass" and "on_hash_fail" callbacks
+    As pieces pass or fail, your `on_hash_pass' and `on_hash_fail' callbacks
     are triggered.
 
-  "start( )"
+  `start( )'
     Sends a 'started' event to trackers and starts performing as a client is
     expected. New connections are made and accepted, requests are made and
     filled, etc.
 
-  "stop( )"
+  `stop( )'
     Sends a stopped event to trackers, closes all connections, stops
     attempting new outgoing connections, rejects incoming connections and
     closes all open files.
 
-  "pause( )"
+  `pause( )'
     The client remains mostly active; new connections will be made and
     accepted, etc. but no requests will be made or filled while the client
     is paused.
 
-  "infohash( )"
+  `infohash( )'
     Returns the 20-byte SHA1 hash of the value of the info key from the
     metadata file.
 
-  "peerid( )"
+  `peerid( )'
     Returns the 20 byte string used to identify the client. Please see the
     spec below.
 
-  "port( )"
+  `port( )'
     Returns the port number the client is listening on.
 
-  "size( )"
+  `size( )'
     Returns the total size of all files described in the torrent's metadata.
 
-  "name( )"
+  `name( )'
     Returns the UTF-8 encoded string the metadata suggests we save the file
     (or directory, in the case of multi-file torrents) under.
 
-  "uploaded( )"
+  `uploaded( )'
     Returns the total amount uploaded to remote peers.
 
-  "downloaded( )"
+  `downloaded( )'
     Returns the total amount downloaded from other peers.
 
-  "left( )"
+  `left( )'
     Returns the approximate amount based on the pieces we still want
     multiplied by the size of pieces.
 
-  "piece_length( )"
+  `piece_length( )'
     Returns the number of bytes in each piece the file or files are split
     into. For the purposes of transfer, files are split into fixed-size
     pieces which are all the same length except for possibly the last one
     which may be truncated.
 
-  "bitfield( )"
-    Returns a packed binary string in ascending order (ready for "vec()").
+  `bitfield( )'
+    Returns a packed binary string in ascending order (ready for `vec()').
     Each index that the client has is set to one and the rest are set to
     zero.
 
-  "wanted( )"
-    Returns a packed binary string in ascending order (ready for "vec()").
+  `wanted( )'
+    Returns a packed binary string in ascending order (ready for `vec()').
     Each index that the client has or simply does not want is set to zero
     and the rest are set to one.
 
     This value is calculated every time the method is called. Keep that in
     mind.
 
-  "complete( )"
+  `complete( )'
     Returns true if we have downloaded everything we wanted which is not to
     say that we have all data and can seed.
 
-  "seed( )"
+  `seed( )'
     Returns true if we have all data related to the torrent.
 
-  "files( )"
+  `files( )'
     Returns a list of hash references with the following keys:
 
-    "length"
+    `length'
         Which is the size of file in bytes.
 
-    "path"
+    `path'
         Which is the absolute path of the file.
 
-    "priority"
+    `priority'
         Download priority for this file. By default, all files have a
-        priority of 1. There is no built in scale; the higher the priority,
-        the better odds a piece from it will be downloaded first. Setting a
-        file's priority to 1000 while the rest are still at 1 will likely
-        force the file to complete before any other file is started.
+        priority of `1'. There is no built in scale; the higher the
+        priority, the better odds a piece from it will be downloaded first.
+        Setting a file's priority to `1000' while the rest are still at `1'
+        will likely force the file to complete before any other file is
+        started.
 
         We do not download files with a priority of zero.
 
-  "peers( )"
+  `peers( )'
     Returns the list of currently connected peers. The organization of these
     peers is not yet final so... don't write anything you don't expect to
-    break before we hit "v1.0.0".
+    break before we hit `v1.0.0'.
 
-  "state( )"
-    Returns "active" if the client is started, "paused" if client is paused,
-    and "stopped" if the client is currently stopped.
+  `state( )'
+    Returns `active' if the client is started, `paused' if client is paused,
+    and `stopped' if the client is currently stopped.
 
-  "piece_cache( )"
+  `piece_cache( )'
     Pieces which overlap files with zero priority are stored in a part file
     which is indexed internally. To save this index (for resume, etc.) store
     the values returned by this method and pass it to new( ).
 
-  "trackers( )"
+  `trackers( )'
     Returns a list of hashes, each representing a single tier of trackers as
     defined by BEP12. The hashes contain the following keys:
 
-    "complete"
+    `complete'
         The is a count of complete peers (seeds) as returned by the most
         recent announce.
 
-    "failures"
+    `failures'
         This is a running total of the number of failed announces we've had
         in a row. This value is reset when we have a successful announce.
 
-    "incomplete"
+    `incomplete'
         The is a count of incomplete peers (leechers) as returned by the
         most recent announce.
 
-    "peers"
+    `peers'
         Which is a compact collection of IPv4 peers returned by the tracker.
         See BEP23.
 
-    "peers6"
+    `peers6'
         Which is a compact collection of IPv6 peers returned by the tracker.
         See BEP07.
 
-    "urls"
+    `urls'
         Which is a list of URLs.
 
 This Module is Lame!
@@ -233,7 +234,7 @@ This Module is Lame!
     There are a few things a BitTorrent client must implement (to some
     degree) in order to interact with other clients in a modern day swarm.
     AnyEvent::BitTorrent is meant to meet that bare minimum but it's based
-    on Moose or Mouse so you could always subclass it to add more advanced
+    on Moo so you could always subclass it to add more advanced
     functionality. Hint, hint!
 
   What is currently supported?
@@ -258,8 +259,8 @@ This Module is Lame!
     to this module, most of which are sure to be better suited for advanced
     users. I suggest (in no particular order):
 
-    BitFlu <http://bitflu.workaround.ch/>. It's written in Perl but you'll
-    still need to be on a Linux, *BSD, et al. system to use it.
+    BitFlu. It's written in Perl but you'll still need to be on a Linux,
+    *BSD, et al. system to use it.
     Net::BitTorrent ...in the future. I *do not* suggest using either the
     current stable or unstable versions found on CPAN. The next version is
     being worked on and will be based on Reflex.
@@ -279,8 +280,8 @@ PeerID Specification
     AnyEvent::BitTorrent may be identified in a swarm by its peer id. As of
     this version, our peer id is in 'Azureus style' with a single digit for
     the Major version, two digits for the minor version, and a single
-    character to indicate stability (stable releases marked with "S",
-    unstable releases marked with "U"). It looks sorta like:
+    character to indicate stability (stable releases marked with `S',
+    unstable releases marked with `U'). It looks sorta like:
 
             -AB110S-  Stable v1.10.0 relese (typically found on CPAN, tagged in repo)
             -AB110U-  Unstable v1.10.X release (private builds, early testing, etc.)
@@ -306,17 +307,13 @@ License and Legal
     Copyright (C) 2011-2013 by Sanko Robinson <sanko@cpan.org>
 
     This program is free software; you can redistribute it and/or modify it
-    under the terms of The Artistic License 2.0
-    <http://www.perlfoundation.org/artistic_license_2_0>. See the LICENSE
-    file included with this distribution or notes on the Artistic License
-    2.0 <http://www.perlfoundation.org/artistic_2_0_notes> for
+    under the terms of The Artistic License 2.0. See the LICENSE file
+    included with this distribution or notes on the Artistic License 2.0 for
     clarification.
 
     When separated from the distribution, all original POD documentation is
-    covered by the Creative Commons Attribution-Share Alike 3.0 License
-    <http://creativecommons.org/licenses/by-sa/3.0/us/legalcode>. See the
-    clarification of the CCA-SA3.0
-    <http://creativecommons.org/licenses/by-sa/3.0/us/>.
+    covered by the Creative Commons Attribution-Share Alike 3.0 License. See
+    the clarification of the CCA-SA3.0.
 
     Neither this module nor the Author is affiliated with BitTorrent, Inc.
 

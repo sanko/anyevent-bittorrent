@@ -1,4 +1,9 @@
-Version 0.2.1 | Sometime on September 26th, 2012 | xxxxxxxxxx
+Version 0.2.2 | Ten-ish at night on September 24th, 2013 | 
+
+    API Changes/Compatibility Information:
+     * Fix Moo vs Any::Moose derp
+
+Version 0.2.1 | Early evening, September 23rd, 2013 | ac05d7b
 
     API Changes/Compatibility Information:
      * Move to Moo and Type::Tiny
