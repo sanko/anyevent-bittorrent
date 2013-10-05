@@ -1,20 +1,20 @@
 package t::800_utils::Tracker;
-use Any::Moose;
+use Moo;
+use Types::Standard qw[Defined HashRef Int Str];
 use AnyEvent::Handle;
 use AnyEvent::Socket;
 use Net::BitTorrent::Protocol::BEP03::Bencode qw[:all];
-
 #
-has port => (isa     => 'Int',
-             is      => 'ro',
+has port => (isa     => Int,
+             is      => 'lazy',
              writer  => '_set_port',
-             default => 0
+             default => sub {0}
 );
 has host =>
-    (isa => 'Str', is => 'ro', writer => '_set_host', default => '::');
+    (isa => Str, is => 'lazy', writer => '_set_host', default => sub {'::'});
 has peers => (
-    isa     => 'HashRef[HashRef]',    # By (key ^ info_hash)
-    is      => 'ro',
+    isa => HashRef [HashRef],    # By (key ^ info_hash)
+    is => 'lazy',
     default => sub { {} },
     handles => {
 
@@ -26,13 +26,13 @@ has peers => (
         #find_info_hash => ['map', sub { $_->{'info_hash'} eq $_[0] } ],
     }
 );
-has socket => (isa      => 'Defined',
-               is       => 'ro',
+has socket => (isa      => Defined,
+               is       => 'lazy',
                init_arg => undef,
                builder  => '_build_socket'
 );
-has interval => (is => 'rw', isa => 'Int', default => 60 * 10, lazy => 1);
-has complete => (is => 'rw', isa => 'Int', default => 0, lazy => 1);
+has interval => (is => 'lazy', isa => Int, default => sub { 60 * 10 });
+has complete => (is => 'lazy', isa => Int, default => sub {0});
 
 sub on_drain {
     my $s = shift;
@@ -50,7 +50,7 @@ CPAN ID: SANKO
 
 =head1 License and Legal
 
-Copyright (C) 2008-2012 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2008-2013 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of

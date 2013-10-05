@@ -1,4 +1,9 @@
-Version 0.2.2 | Ten-ish at night on September 24th, 2013 | 
+Version 0.2.3 | Just before midnight on October 4th, 2013 | ??????
+
+    Documentation/Sample Code/Test Suite:
+     * Use Moo and Type::Tiny in tests
+
+Version 0.2.2 | Half past midnight on September 25th, 2013 | f46c4f1
 
     API Changes/Compatibility Information:
      * Fix Moo vs Any::Moose derp
