@@ -1,5 +1,5 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.2.3' }
+{ $AnyEvent::BitTorrent::VERSION = 'v0.2.4' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -94,8 +94,11 @@ has path => (is       => 'ro',
              isa      => $FILE,
              required => 1
 );
-has reserved => (is  => 'lazy',
-                 isa => $RESERVED);
+has reserved => (is         => 'ro',
+                 lazy_build => 1,
+                 builder    => '_build_reserved',
+                 isa        => $RESERVED
+);
 
 sub _build_reserved {
     my $reserved = "\0" x 8;
@@ -129,7 +132,9 @@ has peerid => (
         );
     }
 );
-has bitfield => (is       => 'lazy',
+has bitfield => (is       => 'ro',
+                 lazy     => 1,
+                 builder  => '_build_bitfield',
                  isa      => Str,
                  init_arg => undef,
 );
@@ -168,14 +173,19 @@ has $_ => (is      => 'ro',
            default => sub {0},
            writer  => '_set_' . $_
 ) for qw[uploaded downloaded];
-has infohash => (is       => 'lazy',
+has infohash => (is       => 'ro',
+                 lazy     => 1,
+                 builder  => '_build_infohash',
                  isa      => $INFOHASH,
-                 init_arg => undef,
-                 default  => sub { sha1(bencode(shift->metadata->{info})) }
-);
-has metadata => (is       => 'lazy',
-                 isa      => HashRef,
                  init_arg => undef
+);
+sub _build_infohash { sha1(bencode(shift->metadata->{info})) }
+has metadata => (is         => 'ro',
+                 lazy_build => 1,
+                 builder    => '_build_metadata',
+                 lazy       => 1,
+                 isa        => HashRef,
+                 init_arg   => undef
 );
 
 sub _build_metadata {
@@ -201,7 +211,8 @@ sub piece_count {
     int($count) + (($count == int $count) ? 1 : 0);
 }
 has basedir => (
-    is       => 'lazy',
+    is       => 'ro',
+    lazy     => 1,
     isa      => Str,
     required => 1,
     default  => sub { File::Spec->rel2abs(File::Spec->curdir) },
@@ -211,7 +222,9 @@ has basedir => (
         $s->_clear_files;    # So they can be rebuilt with the new basedir
     }
 );
-has files => (is       => 'lazy',
+has files => (is       => 'ro',
+              lazy     => 1,
+              builder  => '_build_files',
               isa      => ArrayRef [HashRef],
               init_arg => undef,
               clearer  => '_clear_files'
@@ -245,7 +258,12 @@ sub _build_files {
           }
         ];
 }
-has size => (is => 'lazy', isa => Int, init_arg => undef);
+has size => (is       => 'ro',
+             lazy     => 1,
+             builder  => '_build_size',
+             isa      => Int,
+             init_arg => undef
+);
 
 sub _build_size {
     my $s   = shift;
@@ -510,7 +528,8 @@ sub hashcheck (;@) {
             : $s->_trigger_hash_fail($index);
     }
 }
-has peers => (is      => 'lazy',
+has peers => (is      => 'ro',
+              lazy    => 1,
               isa     => HashRef,
               clearer => '_clear_peers',
               builder => '_build_peers'
@@ -558,60 +577,60 @@ sub _del_peer {
     $h->destroy;
 }
 my $shuffle;
-has trackers => (
-    is       => 'lazy',
-    isa      => ArrayRef [HashRef],
-    required => 1,
-    init_arg => undef,
-    default  => sub {
-        my $s = shift;
-        $shuffle //= sub {
-            my $deck = shift;    # $deck is a reference to an array
-            return unless @$deck;    # must not be empty!
-            my $i = @$deck;
-            while (--$i) {
-                my $j = int rand($i + 1);
-                @$deck[$i, $j] = @$deck[$j, $i];
-            }
-        };
-        my $trackers = [
-            map {
-                {urls       => $_,
-                 complete   => 0,
-                 incomplete => 0,
-                 peers      => '',
-                 peers6     => '',
-                 announcer  => undef,
-                 ticker     => AE::timer(
-                     1,
-                     15 * 60,
-                     sub {
-                         return if $s->state eq 'stopped';
-                         $s->announce('started');
-                     }
-                 ),
-                 failures => 0
-                }
-                } defined $s->metadata->{announce}
-            ? [$s->metadata->{announce}]
-            : (),
-            defined $s->metadata->{'announce-list'}
-            ? @{$s->metadata->{'announce-list'}}
-            : ()
-        ];
-        AE::log trace => sub {
-            require Data::Dump;
-            '$trackers before shuffle => ' . Data::Dump::dump($trackers);
-        };
-        $shuffle->($trackers);
-        $shuffle->($_->{urls}) for @$trackers;
-        AE::log trace => sub {
-            require Data::Dump;
-            '$trackers after shuffle => ' . Data::Dump::dump($trackers);
-        };
-        $trackers;
-    }
+has trackers => (is       => 'ro',
+                 lazy     => 1,
+                 builder  => '_build_trackers',
+                 isa      => ArrayRef [HashRef],
+                 init_arg => undef
 );
+
+sub _build_trackers {
+    my $s = shift;
+    $shuffle //= sub {
+        my $deck = shift;    # $deck is a reference to an array
+        return unless @$deck;    # must not be empty!
+        my $i = @$deck;
+        while (--$i) {
+            my $j = int rand($i + 1);
+            @$deck[$i, $j] = @$deck[$j, $i];
+        }
+    };
+    my $trackers = [
+        map {
+            {urls       => $_,
+             complete   => 0,
+             incomplete => 0,
+             peers      => '',
+             peers6     => '',
+             announcer  => undef,
+             ticker     => AE::timer(
+                 1,
+                 15 * 60,
+                 sub {
+                     return if $s->state eq 'stopped';
+                     $s->announce('started');
+                 }
+             ),
+             failures => 0
+            }
+            } defined $s->metadata->{announce} ? [$s->metadata->{announce}]
+        : (),
+        defined $s->metadata->{'announce-list'}
+        ? @{$s->metadata->{'announce-list'}}
+        : ()
+    ];
+    AE::log trace => sub {
+        require Data::Dump;
+        '$trackers before shuffle => ' . Data::Dump::dump($trackers);
+    };
+    $shuffle->($trackers);
+    $shuffle->($_->{urls}) for @$trackers;
+    AE::log trace => sub {
+        require Data::Dump;
+        '$trackers after shuffle => ' . Data::Dump::dump($trackers);
+    };
+    $trackers;
+}
 
 sub announce {
     my ($s, $e) = @_;
@@ -765,7 +784,8 @@ has _fill_requests_timer => (
         );
     }
 );
-has _peer_timer => (is       => 'lazy',
+has _peer_timer => (is       => 'ro',
+                    lazy     => 1,
                     isa      => Ref,
                     init_arg => undef,
                     clearer  => '_clear_peer_timer',
@@ -1119,7 +1139,8 @@ sub _consider_peer {    # Figure out whether or not we find a peer interesting
         }
     }
 }
-has working_pieces => (is       => 'lazy',
+has working_pieces => (is       => 'ro',
+                       lazy     => 1,
                        isa      => HashRef,
                        init_arg => undef,
                        default  => sub { {} }

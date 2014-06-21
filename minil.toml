@@ -1,0 +1,4 @@
+name = "AnyEvent-BitTorrent"
+# badges = ["travis"]
+module_maker="ModuleBuildTiny"
+
