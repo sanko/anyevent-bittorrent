@@ -7,7 +7,7 @@ use AnyEvent::BitTorrent;
 use Test::More;
 use File::Temp;
 $|++;
-my $torrent = q[t/900_data/Sick of Sarah - 2205 BitTorrent Edition.torrent];
+my $torrent = q[t/900_data/kubuntu-active-13.04-desktop-i386.iso.torrent];
 chdir '../..' if !-f $torrent;
 require t::800_utils::Tracker::HTTP;
 my $cv = AE::cv;
@@ -53,7 +53,7 @@ for my $peer (1..10) {
         peers      => '',
         ticker     => AE::timer(
             1,
-            rand (15),
+            rand(15) + 5,
             sub {
                 return if $client{$peer}->state eq 'stopped';
                 $client{$peer}->announce();

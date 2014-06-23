@@ -1,4 +1,9 @@
-Version 0.2.4 | In the year 2000 | ??????
+Version 0.2.5 | In the year 2000 | ??????
+
+    Documentation/Sample Code/Test Suite:
+     * Switch to Kubuntu 23.04 torrent in tests
+
+Version 0.2.4 | During the heat of the day on June 21st, 2014 | f6b6a3f
 
     API Changes/Compatibility Information:
      * Removed Moo-friendly code (is => 'lazy', etc.); now fully Moose compat
@@ -6,7 +11,7 @@ Version 0.2.4 | In the year 2000 | ??????
     Documentation/Sample Code/Test Suite:
       * Convert to Minila
 
-Version 0.2.3 | Just before midnight on October 4th, 2013 | ??????
+Version 0.2.3 | Just before midnight on October 4th, 2013 | 4a19f5f
 
     Documentation/Sample Code/Test Suite:
      * Use Moo and Type::Tiny in tests
