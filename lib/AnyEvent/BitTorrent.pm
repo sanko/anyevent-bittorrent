@@ -53,7 +53,6 @@ has port => (is      => 'ro',
 has socket => (is        => 'ro',
                isa       => Ref,
                init_arg  => undef,
-               required  => 1,
                predicate => '_has_socket',
                builder   => '_build_socket'
 );
