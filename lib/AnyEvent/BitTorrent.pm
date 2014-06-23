@@ -1,5 +1,5 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.2.4' }
+{ $AnyEvent::BitTorrent::VERSION = 'v0.2.5' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -107,30 +107,30 @@ sub _build_reserved {
     AE::log debug => '_build_reserved() => ' . $reserved;
     $reserved;
 }
-has peerid => (
-    is       => 'ro',
-    isa      => $PEERID,
-    init_arg => undef,
-    required => 1,
-    default  => sub {
-        pack(
-            'a20',
-            (sprintf(
-                 '-AB%01d%01d%01d%1s-%7s%-5s',
-                 ($AnyEvent::BitTorrent::VERSION =~ m[^v(\d+)\.(\d+)\.(\d+)]),
-                 ($AnyEvent::BitTorrent::VERSION =~ m[[^\d\.^v]] ? 'U' : 'S'),
-                 (join '',
-                  map {
-                      ['A' .. 'Z', 'a' .. 'z', 0 .. 9, qw[- . _ ~]]
-                      ->[rand(66)]
-                  } 1 .. 7
-                 ),
-                 [qw[KaiLi April Aaron]]->[rand 3]
-             )
-            )
-        );
-    }
+has peerid => (is       => 'ro',
+               isa      => $PEERID,
+               init_arg => undef,
+               required => 1,
+               builder  => '_build_peerid'
 );
+
+sub _build_peerid {
+    return pack(
+        'a20',
+        (sprintf(
+             '-AB%01d%01d%01d%1s-%7s%-5s',
+             ($AnyEvent::BitTorrent::VERSION =~ m[^v(\d+)\.(\d+)\.(\d+)]),
+             ($AnyEvent::BitTorrent::VERSION =~ m[[^\d\.^v]] ? 'U' : 'S'),
+             (join '',
+              map {
+                  ['A' .. 'Z', 'a' .. 'z', 0 .. 9, qw[- . _ ~]]->[rand(66)]
+              } 1 .. 7
+             ),
+             [qw[KaiLi April Aaron]]->[rand 3]
+         )
+        )
+    );
+}
 has bitfield => (is       => 'ro',
                  lazy     => 1,
                  builder  => '_build_bitfield',
