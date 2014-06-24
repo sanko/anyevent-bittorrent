@@ -1,4 +1,9 @@
-Version 0.2.5 | In the year 2000 | ??????
+Version 0.2.6 | In the year 2000 | ??????
+
+    Notes:
+     * All changes in this version are internal layout changes to ease development
+
+Version 0.2.5 | Four-ish on June 23rd, 2014 | de102f6
 
     API Changes/Compatibility Information:
      * Generate peerid in a builder rather than default (more moose stuff)

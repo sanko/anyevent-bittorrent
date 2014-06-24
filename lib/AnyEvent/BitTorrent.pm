@@ -1,5 +1,5 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.2.5' }
+{ $AnyEvent::BitTorrent::VERSION = 'v0.2.6' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -94,7 +94,6 @@ has path => (is       => 'ro',
              required => 1
 );
 has reserved => (is         => 'ro',
-                 lazy_build => 1,
                  builder    => '_build_reserved',
                  isa        => $RESERVED
 );
