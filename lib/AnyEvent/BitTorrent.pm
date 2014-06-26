@@ -811,51 +811,57 @@ sub _build_peer_timer {
                 last
                     if scalar(keys %{$s->peers}) > 100;    # XXX - Max peers
                 my $addr = splice @cache, rand $#cache, 1;
-                AE::log trace => 'Connecting to %s:%d', @$addr;
-                my $handle;
-                $handle = AnyEvent::Handle->new(
-                    connect    => $addr,
-                    on_prepare => sub {60},
-                    on_error   => sub {
-                        my ($hdl, $fatal, $msg) = @_;
-
-                        # XXX - callback
-                        AE::log
-                            error => 'Socket error: %s (Removing peer)',
-                            $msg;
-                        $s->_del_peer($hdl);
-                    },
-                    on_connect_error => sub {
-                        my ($hdl, $fatal, $msg) = @_;
-                        $s->_del_peer($hdl);
-
-                        # XXX - callback
-                        AE::log
-                            error => sprintf "%sfatal error (%s)\n",
-                            $fatal ? '' : 'non-',
-                            $msg // 'Connection timed out';
-                        return if !$fatal;
-                    },
-                    on_connect => sub {
-                        my ($h, $host, $port, $retry) = @_;
-                        AE::log
-                            trace => 'Connection established with %s:%d',
-                            $host, $port;
-                        $s->_add_peer($handle);
-                        $s->_send_handshake($handle);
-                    },
-                    on_eof => sub {
-                        my $h = shift;
-                        AE::log trace => 'EOF from peer';
-                        $s->_del_peer($h);
-                    },
-                    on_read => sub {
-                        $s->_on_read(@_);
-                    }
-                );
+                $s->_new_peer($addr);
             }
         }
     );
+}
+
+sub _new_peer {
+    my ($s, $addr) = @_;
+    AE::log trace => 'Connecting to %s:%d', @$addr;
+    my $handle;
+    $handle = AnyEvent::Handle->new(
+        connect    => $addr,
+        on_prepare => sub {60},
+        on_error   => sub {
+            my ($hdl, $fatal, $msg) = @_;
+
+            # XXX - callback
+            AE::log
+                error => 'Socket error: %s (Removing peer)',
+                $msg;
+            $s->_del_peer($hdl);
+        },
+        on_connect_error => sub {
+            my ($hdl, $fatal, $msg) = @_;
+            $s->_del_peer($hdl);
+
+            # XXX - callback
+            AE::log
+                error => sprintf "%sfatal error (%s)\n",
+                $fatal ? '' : 'non-',
+                $msg // 'Connection timed out';
+            return if !$fatal;
+        },
+        on_connect => sub {
+            my ($h, $host, $port, $retry) = @_;
+            AE::log
+                trace => 'Connection established with %s:%d',
+                $host, $port;
+            $s->_add_peer($handle);
+            $s->_send_handshake($handle);
+        },
+        on_eof => sub {
+            my $h = shift;
+            AE::log trace => 'EOF from peer';
+            $s->_del_peer($h);
+        },
+        on_read => sub {
+            $s->_on_read(@_);
+        }
+    );
+    return $handle;
 }
 
 sub _on_read_incoming {
