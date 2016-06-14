@@ -27,6 +27,3 @@ cover_db/
 MYMETA.*
 
 /AnyEvent-BitTorrent-*
-
-META.json
-Build.PL
