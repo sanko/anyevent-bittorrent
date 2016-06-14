@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use AnyEvent;
-use lib '../../lib', '../../../net-bittorrent-protocol/lib';
+use lib '../../lib';
 use AnyEvent::BitTorrent;
 use Test::More;
 use File::Temp;
@@ -34,16 +34,16 @@ for my $peer (1..10) {
             pass 'Got piece number ' . pop . ' [' . $client{$peer}->peerid . ']';
             return if $peer <= 3;
             $_->stop for values %client;
-            $cv->send;
+            $cv->send;done_testing;
         },
         on_hash_fail => sub {
             note 'FAIL: ' . pop . ' [' . $client{$peer}->peerid . ']';
         }
     );
     note sprintf 'Opened port %d for %s' , $client{$peer}->port ,$client{$peer}->peerid;
-    if ($peer <= 3) {
-        $client{$peer}->trackers->[0]->{urls} = [];
-    }
+    #if ($peer <= 3) {
+    #    $client{$peer}->trackers->[0]->{urls} = [];
+    #}
     push @{$client{$peer}->trackers}, {
         urls => [
             'http://' . $tracker->host . ':' . $tracker->port . '/announce.pl'
@@ -64,4 +64,4 @@ for my $peer (1..10) {
     };
 }
 $cv->recv;
-done_testing;
+
