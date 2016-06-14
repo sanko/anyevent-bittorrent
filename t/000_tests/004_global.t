@@ -23,12 +23,6 @@ $client = AnyEvent::BitTorrent->new(
     }
 );
 #
-like $client->peerid, qr[^-AB\d{3}[SU]-.{12}$], 'peerid( )';
-is $client->infohash, pack('H*', 'c5588b4606dd1d58e7fb93d8c067e9bf2b50a864'),
-    'infohash( )';
-is $client->size, 1102970880, 'size( )';
-is $client->name, 'kubuntu-active-13.04-desktop-i386.iso', 'name( )';
-like $client->reserved, qr[^.{8}$], 'reserved( )';    # Weak test
 note 'hashchecking...';
 $client->hashcheck();
 note 'running client...';

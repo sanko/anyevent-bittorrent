@@ -1,5 +1,4 @@
 package AnyEvent::BitTorrent;
-{ $AnyEvent::BitTorrent::VERSION = 'v0.2.6' }
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -13,6 +12,8 @@ use File::Spec;
 use File::Path;
 use Net::BitTorrent::Protocol qw[:all];
 use Scalar::Util qw[/weak/];
+#
+our $VERSION = "1.0.0";
 #
 # XXX - These should be ro attributes w/o init args:
 my $block_size = 2**14;
@@ -93,9 +94,9 @@ has path => (is       => 'ro',
              isa      => $FILE,
              required => 1
 );
-has reserved => (is         => 'ro',
-                 builder    => '_build_reserved',
-                 isa        => $RESERVED
+has reserved => (is      => 'ro',
+                 builder => '_build_reserved',
+                 isa     => $RESERVED
 );
 
 sub _build_reserved {
@@ -118,8 +119,8 @@ sub _build_peerid {
         'a20',
         (sprintf(
              '-AB%01d%01d%01d%1s-%7s%-5s',
-             ($AnyEvent::BitTorrent::VERSION =~ m[^v(\d+)\.(\d+)\.(\d+)]),
-             ($AnyEvent::BitTorrent::VERSION =~ m[[^\d\.^v]] ? 'U' : 'S'),
+             ($VERSION =~ m[^v?(\d+)\.(\d+)\.(\d+)]),
+             ($VERSION =~ m[[^\d\.^v]] ? 'U' : 'S'),
              (join '',
               map {
                   ['A' .. 'Z', 'a' .. 'z', 0 .. 9, qw[- . _ ~]]->[rand(66)]
