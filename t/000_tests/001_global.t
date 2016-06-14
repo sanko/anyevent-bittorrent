@@ -1,6 +1,6 @@
 #!perl
 use AnyEvent;
-use lib '../../lib', '../../../net-bittorrent-protocol/lib';
+use lib '../../lib';
 use AnyEvent::BitTorrent;
 use Net::BitTorrent::Protocol qw[:all];
 use Test::More;
@@ -18,11 +18,9 @@ $client = AnyEvent::BitTorrent->new(
     path         => $torrent,
     on_hash_pass => sub {
         pass 'Got piece number ' . pop;
-        return if !$client->complete;
         $client->stop;
         $cv->send;
-    },
-    on_hash_fail => sub { note 'FAIL: ' . pop }
+    }
 );
 #
 like $client->peerid, qr[^-AB\d{3}[SU]-.{12}$], 'peerid( )';
@@ -31,7 +29,8 @@ is $client->infohash, pack('H*', 'c5588b4606dd1d58e7fb93d8c067e9bf2b50a864'),
 is $client->size, 1102970880, 'size( )';
 is $client->name, 'kubuntu-active-13.04-desktop-i386.iso', 'name( )';
 like $client->reserved, qr[^.{8}$], 'reserved( )';    # Weak test
+note 'hashchecking...';
 $client->hashcheck();
-note 'Now, we get to work';
+note 'running client...';
 $cv->recv;    # Pulls one full piece and quits
 done_testing;

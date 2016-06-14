@@ -2,6 +2,7 @@ package t::800_utils::Tracker::HTTP;
 use Net::BitTorrent::Protocol qw[:bencode :compact];    # IPv6
 use Moo;
 use AnyEvent::Socket;
+use Test::More;
 #
 extends 't::800_utils::Tracker';
 
@@ -21,7 +22,7 @@ sub _build_socket {
                 on_read => sub {
                     $s->on_read($hdl, $fh, $paddr, $host, $port, @_);
                 },
-                on_eof => sub { warn 'bye!' }
+                on_eof => sub { note 'bye!' }
             );
         },
         sub {
@@ -88,8 +89,8 @@ sub on_read {
                 )
             };
         }
-        elsif ($path eq '/scrape.pl') { warn 'Scrape!' }
-        else                          { warn 'NFI!' }
+        elsif ($path eq '/scrape.pl') { note 'Scrape!' }
+        else                          { note 'NFI!' }
     }
     $h->rbuf = '';
     $body = bencode $body if ref $body;

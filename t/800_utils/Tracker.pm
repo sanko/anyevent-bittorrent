@@ -27,7 +27,7 @@ has peers => (
     }
 );
 has socket => (isa      => Defined,
-               is       => 'lazy',
+               is       => 'ro',
                init_arg => undef,
                builder  => '_build_socket'
 );

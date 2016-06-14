@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/sanko/anyevent-bittorrent.svg?branch=master)](https://travis-ci.org/sanko/anyevent-bittorrent)
 # NAME
 
 AnyEvent::BitTorrent - Yet Another BitTorrent Client Module
@@ -352,13 +353,13 @@ level heavy lifting.
 
 # Author
 
-Sanko Robinson <sanko@cpan.org> - http://sankorobinson.com/
+Sanko Robinson &lt;sanko@cpan.org> - http://sankorobinson.com/
 
 CPAN ID: SANKO
 
 # License and Legal
 
-Copyright (C) 2011-2013 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2011-2013 by Sanko Robinson &lt;sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of

@@ -4,6 +4,7 @@ use warnings;
 use AnyEvent;
 use lib '../../lib';
 use AnyEvent::BitTorrent;
+#use Net::BitTorrent::Protocol qw[:all];
 use Test::More;
 use File::Temp;
 $|++;
@@ -16,35 +17,40 @@ my $to = AE::timer(90, 0, sub { diag 'Timeout'; ok 'Timeout'; $cv->send });
 #
 my $tracker =
     t::800_utils::Tracker::HTTP->new(host     => '127.0.0.1',
-                                     interval => 15,
-                                     port     => 0
+                                     interval => 15
     );
 note 'HTTP tracker @ http://'
     . $tracker->host . ':'
     . $tracker->port
     . '/announce.pl';
-my %client;
 
-for my $peer (1..10) {
-    $client{$peer} = AnyEvent::BitTorrent->new(
-        port    => 0,
-        basedir => File::Temp::tempdir('AB_ ' . $peer . '_XXXX', TMPDIR => 1),
-        path    => $torrent,
-        on_hash_pass => sub {
-            pass 'Got piece number ' . pop . ' [' . $client{$peer}->peerid . ']';
-            return if $peer <= 3;
-            $_->stop for values %client;
-            $cv->send;done_testing;
-        },
-        on_hash_fail => sub {
-            note 'FAIL: ' . pop . ' [' . $client{$peer}->peerid . ']';
-        }
-    );
-    note sprintf 'Opened port %d for %s' , $client{$peer}->port ,$client{$peer}->peerid;
-    #if ($peer <= 3) {
-    #    $client{$peer}->trackers->[0]->{urls} = [];
-    #}
-    push @{$client{$peer}->trackers}, {
+#
+ my ($client, $peer);
+ #
+$client = AnyEvent::BitTorrent->new(
+    basedir      => File::Temp::tempdir('AB_XXXX', TMPDIR => 1),
+    path         => $torrent,
+    on_hash_pass => sub {
+        pass 'Got piece number ' . pop(@_) . ' in client';
+        #$client->stop;
+        #$cv->send;
+    }
+);
+#
+$peer = AnyEvent::BitTorrent->new(
+    basedir      => File::Temp::tempdir('AB_XXXX', TMPDIR => 1),
+    path         => $torrent,
+    on_hash_pass => sub {
+        pass 'Got piece number ' . pop(@_) . ' in peer';
+        $client->stop;
+        $cv->send;
+    }
+);
+#
+for my $p ($client, $peer) {
+$p->hashcheck();
+# add local tracker
+push @{$p->trackers}, {
         urls => [
             'http://' . $tracker->host . ':' . $tracker->port . '/announce.pl'
         ],
@@ -55,13 +61,18 @@ for my $peer (1..10) {
             1,
             rand(15) + 5,
             sub {
-                return if $client{$peer}->state eq 'stopped';
-                $client{$peer}->announce();
-                note 'Announced from ' . $client{$peer}->peerid
+                return if $p->state eq 'stopped';
+                $p->announce();
+                note 'Announced from ' . $p->peerid
             }
         ),
         failures => 0
-    };
-}
-$cv->recv;
+    };}
+# remove original tracker
 
+shift @{$peer->trackers};
+
+#
+note 'running client...';
+$cv->recv;    # Pulls one full piece and quits
+done_testing;
