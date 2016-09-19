@@ -2,6 +2,11 @@ Changes for AnyEvent::BitTorrent
 
 {{$NEXT}}
 
+1.0.1 2016-09-19T19:56:49Z
+
+    Resolved Issues/Bug Fixes:
+      * When pieces didn't break apart evenly, we were requesting miscalculated blocks
+
 1.0.0 2016-06-14T23:29:24Z
 
     Documentation/Sample Code/Test Suite:

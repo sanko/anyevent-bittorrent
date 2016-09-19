@@ -13,7 +13,7 @@ use File::Path;
 use Net::BitTorrent::Protocol qw[:all];
 use Scalar::Util qw[/weak/];
 #
-our $VERSION = "1.0.0";
+our $VERSION = "1.0.1";
 #
 # XXX - These should be ro attributes w/o init args:
 my $block_size = 2**14;
@@ -1205,8 +1205,7 @@ sub _request_pieces {
         my $offset = shift @unrequested;
         $offset // return;    # XXX - Start working on another piece
         my $_block_size
-            = ($index == $s->piece_count && ($offset == $offsets[-1]))
-            ?
+            = ($offset == $offsets[-1]) ?
             $piece_size % $block_size
             : $block_size;
 
@@ -1216,7 +1215,7 @@ sub _request_pieces {
             $index, $offset, $_block_size;
         $s->_send_encrypted($p->{handle},
                             build_request($index, $offset, $_block_size))
-            ;    # XXX - len for last piece
+            ;                 # XXX - len for last piece
         $s->working_pieces->{$index}{$offset} = [
             $index, $offset,
             $_block_size,
@@ -1729,7 +1728,7 @@ CPAN ID: SANKO
 
 =head1 License and Legal
 
-Copyright (C) 2011-2013 by Sanko Robinson <sanko@cpan.org>
+Copyright (C) 2011-2016 by Sanko Robinson <sanko@cpan.org>
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of
