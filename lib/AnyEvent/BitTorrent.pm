@@ -13,7 +13,7 @@ use File::Path;
 use Net::BitTorrent::Protocol qw[:all];
 use Scalar::Util qw[/weak/];
 #
-our $VERSION = "1.0.1";
+our $VERSION = "1.0.2";
 #
 # XXX - These should be ro attributes w/o init args:
 my $block_size = 2**14;
@@ -126,7 +126,7 @@ sub _build_peerid {
                   ['A' .. 'Z', 'a' .. 'z', 0 .. 9, qw[- . _ ~]]->[rand(66)]
               } 1 .. 7
              ),
-             [qw[KaiLi April Aaron]]->[rand 3]
+             [qw[KaiLi April Aaron Sanko]]->[rand 4]
          )
         )
     );
@@ -490,7 +490,7 @@ WRITE: while ((defined $data) && (length $data > 0)) {
         last WRITE if not defined $s->files->[$file_index];
         $total_offset = 0;
     }
-    return 1;
+    return length $data;
 }
 
 sub hashcheck (;@) {
@@ -560,7 +560,8 @@ sub _add_peer {
         remote_allowed => [],
         local_suggest  => [],
         remote_suggest => [],
-        #
+
+        # No encryption :(
         encryption => '?'
     };
 }
@@ -649,7 +650,7 @@ sub _announce_tier {
         = 'AnyEvent::BitTorrent/' . $AnyEvent::BitTorrent::VERSION;
     my $_url = $tier->{urls}[0] . '?info_hash=' . sub {
         local $_ = shift;
-        s/([\W])/"%" . uc(sprintf("%2.2x",ord($1)))/eg;
+        s/([^A-Za-z0-9])/sprintf("%%%2.2X", ord($1))/ge;
         $_;
         }
         ->($s->infohash)
@@ -1003,8 +1004,7 @@ sub _on_read {
                     keys %{$s->working_pieces->{$index}};
                 if ((substr($s->pieces, $index * 20, 20) eq sha1($piece))) {
                     for my $attempt (1 .. 5) {   # XXX = 5 == failure callback
-                        last
-                            if $s->_write($index, 0, $piece) == length $piece;
+                        last unless $s->_write($index, 0, $piece);
                     }
                     vec($s->{bitfield}, $index, 1) = 1;
                     $s->_broadcast(
@@ -1050,10 +1050,6 @@ sub _on_read {
                         || ($_->[2] != $length)
                 } @{$s->peers->{$h}{remote_requests}}
             ];
-        }
-        elsif ($packet->{type} == $PORT) {
-
-            # Do nothing... as we don't have a DHT node. Yet?
         }
         elsif ($packet->{type} == $SUGGEST) {
             push @{$s->peers->{$h}{local_suggest}}, $packet->{payload};
@@ -1173,12 +1169,11 @@ sub _request_pieces {
     if (scalar keys %{$s->working_pieces} < 10) {   # XXX - Max working pieces
         for my $findex (0 .. $#{$s->files}) {
             for my $index ($s->_file_to_range($findex)) {
-                push @indexes, map {
-                    vec($p->{bitfield}, $index, 1)
-                        && !vec($s->bitfield, $index, 1) ?
-                        $index
-                        : ()
-                } 1 .. $s->{files}[$findex]{priority};
+                next
+                    if !(vec($p->{bitfield}, $index, 1)
+                         && !vec($s->bitfield, $index, 1));
+                push @indexes,
+                    map {$index} 1 .. $s->{files}[$findex]{priority};
             }
         }
     }
@@ -1194,20 +1189,23 @@ sub _request_pieces {
     my $block_count = $piece_size / $block_size;
     my @offsets = map { $_ * $block_size }
         0 .. $block_count - ((int($block_count) == $block_count) ? 1 : 0);
-    $s->working_pieces->{$index} //= {map { $_ => undef } @offsets};
+    $s->working_pieces->{$index} //= {map { $_ => {} } @offsets};
     my @unrequested = sort { $a <=> $b }
         grep {    # XXX - If there are no unrequested blocks, pick a new index
         (!ref $s->working_pieces->{$index}{$_})
             || (   (!defined $s->working_pieces->{$index}{$_}[4])
                 && (!defined $s->working_pieces->{$index}{$_}[3]))
         } @offsets;
-    for (scalar @{$p->{local_requests}} .. 12) {
+    my @unfilled_local_requests
+        = grep { !defined $_->[4] } @{$p->{local_requests}};
+    for (scalar @unfilled_local_requests .. 12) {
         my $offset = shift @unrequested;
         $offset // return;    # XXX - Start working on another piece
         my $_block_size
             = ($offset == $offsets[-1]) ?
-            $piece_size % $block_size
+            ($piece_size % $block_size) || $block_size
             : $block_size;
+        next if !$_block_size;
 
         # XXX - Limit to x req per peer (future: based on bandwidth)
         AE::log
@@ -1215,7 +1213,7 @@ sub _request_pieces {
             $index, $offset, $_block_size;
         $s->_send_encrypted($p->{handle},
                             build_request($index, $offset, $_block_size))
-            ;                 # XXX - len for last piece
+            ;    # XXX - len for last piece
         $s->working_pieces->{$index}{$offset} = [
             $index, $offset,
             $_block_size,
@@ -1324,7 +1322,6 @@ sub BUILD {
 sub _send_encrypted {
     my ($s, $h, $packet) = @_;
     return if !$h;    # XXX - $s->_del_peer($p->{handle})
-         # XXX - Currently doesn't do anything and may never do anything
     AE::log trace => sub {
         require Data::Dump;
         'Outgoing packet: ' . Data::Dump::dump($packet);
@@ -1335,11 +1332,9 @@ sub _send_encrypted {
 sub _send_handshake {
     my ($s, $h) = @_;
     AE::log trace => 'Outgoing handshake';
-
-    # XXX - Send encrypted handshake if encryption status is unknown or true
     $h->push_write(build_handshake($s->reserved, $s->infohash, $s->peerid));
 }
-1;
+1337;
 
 =pod
 

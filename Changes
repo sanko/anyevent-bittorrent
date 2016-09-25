@@ -2,6 +2,11 @@ Changes for AnyEvent::BitTorrent
 
 {{$NEXT}}
 
+1.0.2 2016-09-25T16:26:42Z
+
+    Resolved Issues/Bug Fixes:
+      * Minor edge case fixes
+
 1.0.1 2016-09-19T19:56:49Z
 
     Resolved Issues/Bug Fixes:
